@@ -1,9 +1,11 @@
-CREATE DATABASE restaurapp
+DROP DATABASE IF EXISTS restaurapp;
+
+CREATE DATABASE restaurapp;
 
 CREATE TABLE sucursal(
     sucursal_id SERIAL PRIMARY KEY,
     nombre VARCHAR(40) NOT NULL,
-    direccion VARCHAR(60),
+    direccion VARCHAR(60) NOT NULL,
     region VARCHAR(40)
 );
 
@@ -19,8 +21,8 @@ CREATE TABLE empleado(
     empleado_id SERIAL PRIMARY KEY,
     sucursal_id INT NOT NULL,
     rol_id INT NOT NULL,
-    nombre VARCHAR(30),
-    apellido VARCHAR(30),
+    nombre VARCHAR(30) NOT NULL,
+    apellido VARCHAR(30) NOT NULL,
     estado estado_empleado NOT NULL DEFAULT 'activo' ,
     contraseña VARCHAR(255) NOT NULL,
 
@@ -133,7 +135,7 @@ CREATE TABLE cuentaMesa(
         REFERENCES mesa(mesa_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
-)
+);
 
 CREATE TABLE comensal(
     comensal_id SERIAL PRIMARY KEY,
@@ -145,7 +147,7 @@ CREATE TABLE comensal(
         REFERENCES cuenta(cuenta_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
-)
+);
 
 
 CREATE TABLE reserva(
@@ -191,8 +193,8 @@ CREATE TABLE categoria(
 
 CREATE TABLE producto(
     producto_id SERIAL PRIMARY KEY,
-    id_categoria INT ,
-    nombre VARCHAR(50),
+    categoria_id INT ,
+    nombre VARCHAR(50) NOT NULL,
     descripcion TEXT,
     precio_unitario NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     es_paquete BOOLEAN NOT NULL DEFAULT FALSE,
@@ -282,7 +284,73 @@ CREATE TABLE detalle_modificador(
         REFERENCES modificador(modificador_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
-)
+);
+
+
+CREATE TABLE sesion(
+    sesion_id SERIAL PRIMARY KEY,
+    empleado_id INT NOT NULL,
+    dispositivo_id INT NOT NULL,
+    fecha_hora_apertura TIMESTAMP NOT NULL DEFAULT NOW(),
+    fecha_hora_cierre TIMESTAMP,
+    efectivo_inicial NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    efectivo_cierre_conteo NUMERIC(10,2),
+    efectivo_cierre_sistema NUMERIC(10,2),
+    diferencia NUMERIC(10,2),
+    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
+
+    CONSTRAINT fk_sesion_empleado
+        FOREIGN KEY (empleado_id)
+        REFERENCES empleado(empleado_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_sesion_dispositivo
+        FOREIGN KEY (dispositivo_id)
+        REFERENCES dispositivo(dispositivo_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+
+);
+
+CREATE TABLE movimiento_caja(
+    mov_caja_id SERIAL PRIMARY KEY,
+    sesion_id INT NOT NULL,
+    tipo VARCHAR(20) NOT NULL,
+    monto NUMERIC(10,2),
+    fecha_movimiento TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_movimiento_sesion
+        FOREIGN KEY(sesion_id)
+        REFERENCES sesion(sesion_id)
+        ON UPDATE CASCADE
+        
+
+);
+
+CREATE TABLE pago(
+    pago_id SERIAL PRIMARY KEY,
+    fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
+    monto NUMERIC(2,10)
+    --foreign key comensal o cuenta por definir
+);
+
+
+
+
+CREATE TABLE dispositivo(
+    dispositivo_id SERIAL PRIMARY KEY,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
+    tipo VARCHAR(30),
+    estado VARCHAR(30),
+    modelo VARCHAR(60),
+
+);
+
+
+
+
+
 
 
 
