@@ -13,9 +13,8 @@ CREATE TABLE rol(
     rol_id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,
     descripcion VARCHAR(50)
-)
---Enum de emleados
-CREATE TYPE estado_empleado AS ENUM ('activo', 'inactivo');
+);
+
 
 CREATE TABLE empleado(
     empleado_id SERIAL PRIMARY KEY,
@@ -23,7 +22,7 @@ CREATE TABLE empleado(
     rol_id INT NOT NULL,
     nombre VARCHAR(30) NOT NULL,
     apellido VARCHAR(30) NOT NULL,
-    estado estado_empleado NOT NULL DEFAULT 'activo' ,
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
     contraseña VARCHAR(255) NOT NULL,
 
     CONSTRAINT fk_rol
@@ -37,7 +36,7 @@ CREATE TABLE empleado(
         REFERENCES sucursal(sucursal_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
-)
+);
 
 CREATE TABLE areaventa(
     area_id SERIAL PRIMARY KEY,
@@ -53,40 +52,6 @@ CREATE TABLE areaventa(
 
 --Crear el enum
 CREATE TYPE estado_mesa AS ENUM ('libre', 'ocupada', 'reservada');
-
-/* opcion 1: 
-
-cuenta_id dentro de mesa, cuenta_id se va actualizando o se cambia a null, 
-asi podemos saber facilmente cual esta ocupada o disponible, este modelo
-no guardaria el historial de en que mesa estuvo la cuenta
-
-CREATE TABLE mesa(
-    mesa_id SERIAL PRIMARY KEY,
-    area_id INT NOT NULL,
-    cuenta_id INT,               --cuenta_id en la mesa porque ya no necesitamos la M a M cuentaMesa
-    num_mesa INT NOT NULL,
-    estado estado_mesa NOT NULL DEFAULT 'libre',
-    CONSTRAINT fk_mesa_area
-        FOREIGN KEY(area_id)
-        REFERENCES areaventa(area_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
-    
-    CONSTRAINT fk_cuenta_mesa
-        FOREIGN KEY (cuenta_id)
-        REFERENCES cuenta(cuenta_id)
-        ON UPDATE CASCADE
-        ON DELETE SET NULL
-);
-
-CREATE TABLE cuenta(
-    cuenta_id SERIAL PRIMARY KEY,
-    fecha_hora_inicio TIMESTAMP NOT NULL DEFAULT NOW(),
-    fecha_hora_cierre TIMESTAMP,
-    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
-
-)
-*/
 
 --OPCION 2 
 
@@ -105,16 +70,9 @@ CREATE TABLE mesa(
 
 CREATE TABLE cuenta (
     cuenta_id SERIAL PRIMARY KEY,
-    sucursal_id INT NOT NULL,
     fecha_hora_inicio TIMESTAMP NOT NULL DEFAULT NOW(),
     fecha_hora_cierre TIMESTAMP,
-    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
-
-    CONSTRAINT fk_cuenta_sucursal
-        FOREIGN KEY (sucursal_id)
-        REFERENCES sucursal(sucursal_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
+    estado BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE cuentaMesa(
@@ -148,7 +106,6 @@ CREATE TABLE comensal(
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
-
 
 CREATE TABLE reserva(
     reserva_id SERIAL PRIMARY KEY,
@@ -226,7 +183,7 @@ CREATE TABLE producto_componente (
 
 );
 
-CREATE TABLE detalleCuenta(
+CREATE TABLE detalle_cuenta(
     detalle_id SERIAL PRIMARY KEY,
     comensal_id INT NOT NULL,
     producto_id INT NOT NULL,
@@ -246,6 +203,7 @@ CREATE TABLE detalleCuenta(
         ON DELETE RESTRICT
 );
 
+--Dispositivo debe estar registrado a cuenta ?? 
 
 CREATE TABLE categoria_modificador(
     categoria_mod_id SERIAL PRIMARY KEY,
@@ -267,7 +225,7 @@ CREATE TABLE modificador(
 );
 
 CREATE TABLE detalle_modificador(
-    id_detalle_mod SERIAL PRIMARY KEY,
+    detalle_modificador SERIAL  PRIMARY KEY,
     detalle_id INT NOT NULL,
     modificador_id INT,
     cantidad NUMERIC(10,2) NOT NULL DEFAULT 1,
@@ -313,39 +271,134 @@ CREATE TABLE sesion(
 
 );
 
-CREATE TABLE movimiento_caja(
-    mov_caja_id SERIAL PRIMARY KEY,
-    sesion_id INT NOT NULL,
-    tipo VARCHAR(20) NOT NULL,
-    monto NUMERIC(10,2),
-    fecha_movimiento TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_movimiento_sesion
-        FOREIGN KEY(sesion_id)
-        REFERENCES sesion(sesion_id)
-        ON UPDATE CASCADE
-        
-
-);
+CREATE TABLE metodo_pago(
+    metodo_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(40) NOT NULL,
+    es_efectivo BOOLEAN,
+    referencia VARCHAR(200)
+)
 
 CREATE TABLE pago(
     pago_id SERIAL PRIMARY KEY,
+    metodo_id INT NOT NULL,
     fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
-    monto NUMERIC(2,10)
-    --foreign key comensal o cuenta por definir
+    monto NUMERIC(10,2),
+
+    CONSTRAINT fk_metodo
+    FOREIGN KEY(metodo_id)
+    REFERENCES metodo_pago(metodo_id)
+    ON UPDATE CASCADE
+        ON DELETE RESTRICT
+    
 );
 
 
 
+CREATE TABLE descuento(
+    descuento_id SERIAL PRIMARY KEY,
+    nombre_convenio VARCHAR(60) NOT NULL,
+    tipo VARCHAR(30),
+    porcentaje NUMERIC(10,2),
+    monto_fijo NUMERIC(10,2),
+    activo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE detalle_pago(
+    cuenta_id INT NOT NULL,
+    comensal_id INT,
+    pago_id INT,
+    descuento_id INT,
+
+    CONSTRAINT fk_cuenta
+    FOREIGN KEY(cuenta_id)
+    REFERENCES cuenta(cuenta_id),
+
+    CONSTRAINT fk_comensal
+    FOREIGN KEY(comensal_id)
+    REFERENCES comensal(comensal_id),
+
+    CONSTRAINT fk_pago
+    FOREIGN KEY(pago_id)
+    REFERENCES pago(pago_id),
+
+    CONSTRAINT fk_descuento
+    FOREIGN KEY(descuento_id)
+    REFERENCES descuento(descuento_id)
+);  
+
+CREATE TABLE promocion(
+    promocion_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    esta_activo BOOLEAN NOT NULL DEFAULT TRUE,
+    valor_porcentaje NUMERIC(5,2),
+    monto_minimo NUMERIC(10,2),
+    fecha_hora_inicio TIMESTAMP
+    fecha_hora_fin TIMESTAMP,
+    dias_aplicables VARCHAR(50), 
+    tipo_beneficio VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE detalle_promocion(
+
+    detalle_id INT NOT NULL,
+    promocion_id INT NOT NULL,
+
+    CONSTRAINT pk_detalle_promocion
+    PRIMARY KEY(detalle_id,promocion_id),
+
+    CONSTRAINT fk_detalle
+    FOREIGN KEY (detalle_id)
+    REFERENCES detalle_cuenta(detalle_id),
+
+    CONSTRAINT fk_promocion
+    FOREIGN KEY(promocion_id)
+    REFERENCES promocion(promocion_id)
+);
+
+CREATE TABLE area_impresion (
+    area_impresion_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    ip INET,
+    tipo_impresora VARCHAR(60),
+    estado VARCHAR(20) NOT NULL DEFAULT 'activo',
+);
 
 CREATE TABLE dispositivo(
     dispositivo_id SERIAL PRIMARY KEY,
+    area_impresion_id INT NOT NULL,
     fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
     tipo VARCHAR(30),
     estado VARCHAR(30),
     modelo VARCHAR(60),
 
+    CONSTRAINT fk_area_impresion 
+    FOREIGN KEY(area_impresion_id)
+    REFERENCES area_impresion(area_impresion_id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );
+
+CREATE TABLE area_cocina (
+    area_cocina_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    tipo_area VARCHAR(50),
+    estado VARCHAR(20) DEFAULT 'activo'
+);
+
+CREATE TABLE historial_preparacion(
+    historial_preparacion_id SERIAL PRIMARY KEY,
+    detalle_id INT NOT NULL,
+    area_cocina_id INT NOT NULL,
+    estado VARCHAR(20) NOT NULL,
+    fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
+
+);
+
+
+
+
+
 
 
 
