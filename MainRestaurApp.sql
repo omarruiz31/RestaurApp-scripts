@@ -12,7 +12,7 @@ CREATE TABLE sucursal(
 CREATE TABLE rol(
     rol_id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(50)
+    descripcion VARCHAR(60)
 );
 
 
@@ -20,8 +20,8 @@ CREATE TABLE empleado(
     empleado_id SERIAL PRIMARY KEY,
     sucursal_id INT NOT NULL,
     rol_id INT NOT NULL,
-    nombre VARCHAR(30) NOT NULL,
-    apellido VARCHAR(30) NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
     estado BOOLEAN NOT NULL DEFAULT TRUE,
     contraseña VARCHAR(255) NOT NULL,
 
@@ -98,7 +98,7 @@ CREATE TABLE cuentaMesa(
 CREATE TABLE comensal(
     comensal_id SERIAL PRIMARY KEY,
     cuenta_id INT NOT NULL,
-    nombre_etiqueta VARCHAR(30),
+    nombre_etiqueta VARCHAR(40),
 
     CONSTRAINT fk_cuenta_comensal
         FOREIGN KEY(cuenta_id)
@@ -110,7 +110,7 @@ CREATE TABLE comensal(
 CREATE TABLE reserva(
     reserva_id SERIAL PRIMARY KEY,
     mesa_id INT NOT NULL,
-    nombre VARCHAR(30) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     telefono VARCHAR(12),
     num_acompañantes INT NOT NULL,
     fecha_hora_reserva TIMESTAMP NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE menu(
 CREATE TABLE categoria(
     categoria_id SERIAL PRIMARY KEY,
     menu_id INT NOT NULL,
-    nombre VARCHAR(30),
+    nombre VARCHAR(100),
         CONSTRAINT fk_menu
             FOREIGN KEY (menu_id)
             REFERENCES menu(menu_id)
@@ -151,7 +151,7 @@ CREATE TABLE categoria(
 CREATE TABLE producto(
     producto_id SERIAL PRIMARY KEY,
     categoria_id INT ,
-    nombre VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
     precio_unitario NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     es_paquete BOOLEAN NOT NULL DEFAULT FALSE,
@@ -214,7 +214,7 @@ CREATE TABLE categoria_modificador(
 CREATE TABLE modificador(
     modificador_id SERIAL PRIMARY KEY,
     categoria_mod_id INT NOT null,
-    nombre VARCHAR(40) NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
     precio NUMERIC(10,2) NOT NULL DEFAULT 0.00,
 
     CONSTRAINT fk_mod_categoria
@@ -246,7 +246,6 @@ CREATE TABLE detalle_modificador(
 
 
 
-
 CREATE TABLE metodo_pago(
     metodo_id SERIAL PRIMARY KEY,
     nombre VARCHAR(40) NOT NULL,
@@ -264,7 +263,7 @@ CREATE TABLE pago(
     FOREIGN KEY(metodo_id)
     REFERENCES metodo_pago(metodo_id)
     ON UPDATE CASCADE
-        ON DELETE RESTRICT
+    ON DELETE RESTRICT
     
 );
 
@@ -280,7 +279,7 @@ CREATE TABLE descuento(
 );
 
 CREATE TABLE detalle_pago(
-    cuenta_id INT NOT NULL,
+    cuenta_id INT ,
     comensal_id INT,
     pago_id INT,
     descuento_id INT,
