@@ -157,7 +157,7 @@ CREATE TABLE producto(
     es_paquete BOOLEAN NOT NULL DEFAULT FALSE,
 
     CONSTRAINT fk_categoria_producto
-        FOREIGN KEY (id_categoria)
+        FOREIGN KEY (categoria_id)
         REFERENCES categoria(categoria_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
