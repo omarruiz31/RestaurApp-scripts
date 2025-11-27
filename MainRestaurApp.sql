@@ -5,7 +5,7 @@ CREATE DATABASE restaurapp;
 CREATE TABLE sucursal(
     sucursal_id SERIAL PRIMARY KEY,
     nombre VARCHAR(40) NOT NULL,
-    direccion VARCHAR(60) NOT NULL,
+    direccion VARCHAR(120) NOT NULL,
     region VARCHAR(40)
 );
 
@@ -272,7 +272,7 @@ CREATE TABLE pago(
 
 CREATE TABLE descuento(
     descuento_id SERIAL PRIMARY KEY,
-    nombre_convenio VARCHAR(60) NOT NULL,
+    nombre_convenio VARCHAR(120) NOT NULL,
     tipo VARCHAR(30),
     porcentaje NUMERIC(10,2),
     monto_fijo NUMERIC(10,2),
