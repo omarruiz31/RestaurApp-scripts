@@ -233,7 +233,7 @@ CREATE TABLE detalle_modificador(
 
     CONSTRAINT fk_dm_detalle
         FOREIGN KEY(detalle_id)
-        REFERENCES detalleCuenta(detalle_id)
+        REFERENCES detalle_cuenta(detalle_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
@@ -245,31 +245,6 @@ CREATE TABLE detalle_modificador(
 );
 
 
-CREATE TABLE sesion(
-    sesion_id SERIAL PRIMARY KEY,
-    empleado_id INT NOT NULL,
-    dispositivo_id INT NOT NULL,
-    fecha_hora_apertura TIMESTAMP NOT NULL DEFAULT NOW(),
-    fecha_hora_cierre TIMESTAMP,
-    efectivo_inicial NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-    efectivo_cierre_conteo NUMERIC(10,2),
-    efectivo_cierre_sistema NUMERIC(10,2),
-    diferencia NUMERIC(10,2),
-    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
-
-    CONSTRAINT fk_sesion_empleado
-        FOREIGN KEY (empleado_id)
-        REFERENCES empleado(empleado_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-
-    CONSTRAINT fk_sesion_dispositivo
-        FOREIGN KEY (dispositivo_id)
-        REFERENCES dispositivo(dispositivo_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
-
-);
 
 
 CREATE TABLE metodo_pago(
@@ -277,7 +252,7 @@ CREATE TABLE metodo_pago(
     nombre VARCHAR(40) NOT NULL,
     es_efectivo BOOLEAN,
     referencia VARCHAR(200)
-)
+);
 
 CREATE TABLE pago(
     pago_id SERIAL PRIMARY KEY,
@@ -333,7 +308,7 @@ CREATE TABLE promocion(
     esta_activo BOOLEAN NOT NULL DEFAULT TRUE,
     valor_porcentaje NUMERIC(5,2),
     monto_minimo NUMERIC(10,2),
-    fecha_hora_inicio TIMESTAMP
+    fecha_hora_inicio TIMESTAMP,
     fecha_hora_fin TIMESTAMP,
     dias_aplicables VARCHAR(50), 
     tipo_beneficio VARCHAR(50) NOT NULL
@@ -361,7 +336,7 @@ CREATE TABLE area_impresion (
     nombre VARCHAR(100) NOT NULL,
     ip INET,
     tipo_impresora VARCHAR(60),
-    estado VARCHAR(20) NOT NULL DEFAULT 'activo',
+    estado VARCHAR(20) NOT NULL DEFAULT 'activo'
 );
 
 CREATE TABLE dispositivo(
@@ -379,6 +354,32 @@ CREATE TABLE dispositivo(
     ON DELETE RESTRICT
 );
 
+CREATE TABLE sesion(
+    sesion_id SERIAL PRIMARY KEY,
+    empleado_id INT NOT NULL,
+    dispositivo_id INT NOT NULL,
+    fecha_hora_apertura TIMESTAMP NOT NULL DEFAULT NOW(),
+    fecha_hora_cierre TIMESTAMP,
+    efectivo_inicial NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    efectivo_cierre_conteo NUMERIC(10,2),
+    efectivo_cierre_sistema NUMERIC(10,2),
+    diferencia NUMERIC(10,2),
+    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
+
+    CONSTRAINT fk_sesion_empleado
+        FOREIGN KEY (empleado_id)
+        REFERENCES empleado(empleado_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_sesion_dispositivo
+        FOREIGN KEY (dispositivo_id)
+        REFERENCES dispositivo(dispositivo_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+
+);
+
 CREATE TABLE area_cocina (
     area_cocina_id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -393,6 +394,18 @@ CREATE TABLE historial_preparacion(
     estado VARCHAR(20) NOT NULL,
     fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
 
+    CONSTRAINT fk_detalle
+    FOREIGN KEY(detalle_id)
+    REFERENCES detalle_cuenta(detalle_id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_historial_area
+    FOREIGN KEY(area_cocina_id)
+    REFERENCES area_cocina(area_cocina_id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+    
 );
 
 
