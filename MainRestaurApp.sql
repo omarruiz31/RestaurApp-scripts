@@ -1,12 +1,9 @@
-DROP DATABASE IF EXISTS restaurapp;
-
-CREATE DATABASE restaurapp;
 
 CREATE TABLE sucursal(
     sucursal_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(40) NOT NULL,
+    nombre VARCHAR(60) NOT NULL,
     direccion VARCHAR(120) NOT NULL,
-    region VARCHAR(40)
+    region VARCHAR(60)
 );
 
 CREATE TABLE rol(
@@ -272,7 +269,7 @@ CREATE TABLE pago(
 CREATE TABLE descuento(
     descuento_id SERIAL PRIMARY KEY,
     nombre_convenio VARCHAR(120) NOT NULL,
-    tipo VARCHAR(30),
+    tipo VARCHAR(50),
     porcentaje NUMERIC(10,2),
     monto_fijo NUMERIC(10,2),
     activo BOOLEAN NOT NULL DEFAULT TRUE
@@ -342,8 +339,8 @@ CREATE TABLE dispositivo(
     dispositivo_id SERIAL PRIMARY KEY,
     area_impresion_id INT NOT NULL,
     fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
-    tipo VARCHAR(30),
-    estado VARCHAR(30),
+    tipo VARCHAR(50),
+    estado VARCHAR(50),
     modelo VARCHAR(60),
 
     CONSTRAINT fk_area_impresion 
@@ -383,14 +380,14 @@ CREATE TABLE area_cocina (
     area_cocina_id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     tipo_area VARCHAR(50),
-    estado VARCHAR(20) DEFAULT 'activo'
+    estado VARCHAR(30) DEFAULT 'activo'
 );
 
 CREATE TABLE historial_preparacion(
     historial_preparacion_id SERIAL PRIMARY KEY,
     detalle_id INT NOT NULL,
     area_cocina_id INT NOT NULL,
-    estado VARCHAR(20) NOT NULL,
+    estado VARCHAR(50) NOT NULL,
     fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_detalle
