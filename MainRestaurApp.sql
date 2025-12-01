@@ -1,9 +1,21 @@
+CREATE TABLE restaurante(
+    restaurante_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(120) NOT NULL,
+    telefono VARCHAR(12),
+    RFC VARCHAR (120)
+);
 
 CREATE TABLE sucursal(
     sucursal_id SERIAL PRIMARY KEY,
+    restaurante_id INT NOT NULL,
     nombre VARCHAR(60) NOT NULL,
     direccion VARCHAR(120) NOT NULL,
-    region VARCHAR(60)
+    region VARCHAR(60),
+
+    CONSTRAINT fk_restaurant
+    FOREIGN KEY(restaurante_id)
+    REFERENCES restaurante(restaurante_id)
+    ON UPDATE CASCADE
 );
 
 CREATE TABLE rol(
@@ -119,6 +131,8 @@ CREATE TABLE reserva(
 );
 
 
+
+
 CREATE TABLE menu(
     menu_id SERIAL PRIMARY KEY,
     sucursal_id INT NOT NULL,
@@ -180,68 +194,15 @@ CREATE TABLE producto_componente (
 
 );
 
-CREATE TABLE detalle_cuenta(
-    detalle_id SERIAL PRIMARY KEY,
-    comensal_id INT NOT NULL,
-    producto_id INT NOT NULL,
-    cantidad  NUMERIC(10,2),
-    precio_unitario NUMERIC(10,2) NOT NULL,
-
-    CONSTRAINT fk_detalle_comensal
-        FOREIGN KEY (comensal_id)
-        REFERENCES comensal(comensal_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-    
-    CONSTRAINT fk_detalle_producto
-        FOREIGN KEY(producto_id)
-        REFERENCES producto(producto_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
-);
 
 --Dispositivo debe estar registrado a cuenta ?? 
-
-CREATE TABLE categoria_modificador(
-    categoria_mod_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL
-);
 
 
 CREATE TABLE modificador(
     modificador_id SERIAL PRIMARY KEY,
-    categoria_mod_id INT NOT null,
     nombre VARCHAR(50) NOT NULL,
-    precio NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-
-    CONSTRAINT fk_mod_categoria
-        FOREIGN KEY(categoria_mod_id)
-        REFERENCES categoria_modificador(categoria_mod_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
+    precio NUMERIC(10,2) NOT NULL DEFAULT 0.00
 );
-
-CREATE TABLE detalle_modificador(
-    detalle_modificador SERIAL  PRIMARY KEY,
-    detalle_id INT NOT NULL,
-    modificador_id INT,
-    cantidad NUMERIC(10,2) NOT NULL DEFAULT 1,
-    precio_unitario NUMERIC(10,2) NOT NULL,
-
-    CONSTRAINT fk_dm_detalle
-        FOREIGN KEY(detalle_id)
-        REFERENCES detalle_cuenta(detalle_id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_dm_modificador
-        FOREIGN KEY(modificador_id)
-        REFERENCES modificador(modificador_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
-);
-
-
 
 CREATE TABLE metodo_pago(
     metodo_id SERIAL PRIMARY KEY,
@@ -255,6 +216,7 @@ CREATE TABLE pago(
     metodo_id INT NOT NULL,
     fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
     monto NUMERIC(10,2),
+    propina NUMERIC(10,2),
 
     CONSTRAINT fk_metodo
     FOREIGN KEY(metodo_id)
@@ -276,6 +238,7 @@ CREATE TABLE descuento(
 );
 
 CREATE TABLE detalle_pago(
+    detalle_pago_id SERIAL PRIMARY KEY,
     cuenta_id INT ,
     comensal_id INT,
     pago_id INT,
@@ -310,22 +273,6 @@ CREATE TABLE promocion(
     tipo_beneficio VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE detalle_promocion(
-
-    detalle_id INT NOT NULL,
-    promocion_id INT NOT NULL,
-
-    CONSTRAINT pk_detalle_promocion
-    PRIMARY KEY(detalle_id,promocion_id),
-
-    CONSTRAINT fk_detalle
-    FOREIGN KEY (detalle_id)
-    REFERENCES detalle_cuenta(detalle_id),
-
-    CONSTRAINT fk_promocion
-    FOREIGN KEY(promocion_id)
-    REFERENCES promocion(promocion_id)
-);
 
 CREATE TABLE area_impresion (
     area_impresion_id SERIAL PRIMARY KEY,
@@ -348,6 +295,69 @@ CREATE TABLE dispositivo(
     REFERENCES area_impresion(area_impresion_id)
     ON UPDATE CASCADE
     ON DELETE RESTRICT
+);
+
+CREATE TABLE detalle_cuenta(
+    detalle_id SERIAL PRIMARY KEY,
+    comensal_id INT NOT NULL,
+    dispositivo_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    cantidad  NUMERIC(10,2),
+    precio_unitario NUMERIC(10,2) NOT NULL,
+
+    CONSTRAINT fk_detalle_comensal
+        FOREIGN KEY (comensal_id)
+        REFERENCES comensal(comensal_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_detalle_producto
+        FOREIGN KEY(producto_id)
+        REFERENCES producto(producto_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    
+    CONSTRAINT fk_detalle_dispositivo
+        FOREIGN KEY(dispositivo_id)
+        REFERENCES dispositivo(dispositivo_id)
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE detalle_modificador(
+    detalle_modificador SERIAL  PRIMARY KEY,
+    detalle_id INT NOT NULL,
+    modificador_id INT,
+    cantidad NUMERIC(10,2) NOT NULL DEFAULT 1,
+    precio_unitario NUMERIC(10,2) NOT NULL,
+
+    CONSTRAINT fk_dm_detalle
+        FOREIGN KEY(detalle_id)
+        REFERENCES detalle_cuenta(detalle_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_dm_modificador
+        FOREIGN KEY(modificador_id)
+        REFERENCES modificador(modificador_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE detalle_promocion(
+
+    detalle_id INT NOT NULL,
+    promocion_id INT NOT NULL,
+
+    CONSTRAINT pk_detalle_promocion
+    PRIMARY KEY(detalle_id,promocion_id),
+
+    CONSTRAINT fk_detalle
+    FOREIGN KEY (detalle_id)
+    REFERENCES detalle_cuenta(detalle_id),
+
+    CONSTRAINT fk_promocion
+    FOREIGN KEY(promocion_id)
+    REFERENCES promocion(promocion_id)
 );
 
 CREATE TABLE sesion(
@@ -403,17 +413,3 @@ CREATE TABLE historial_preparacion(
     ON DELETE RESTRICT
     
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
