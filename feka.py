@@ -4,252 +4,208 @@ import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-# --- CONFIGURACIÓN DE LA BASE DE DATOS ---
+# --- CONFIGURACIÓN ---
 DB_CONFIG = {
-    'dbname': 'restaurapp',    # <--- CAMBIA ESTO
-    'user': 'postgres',             # <--- CAMBIA ESTO
-    'password': '12345',    # <--- CAMBIA ESTO
+    'dbname': 'restaurapp',  # <--- PON TU NOMBRE DE BD AQUÍ
+    'user': 'postgres',           # <--- TU USUARIO
+    'password': '12345',  # <--- TU CONTRASEÑA
     'host': 'localhost',
     'port': '5432'
 }
 
-fake = Faker('es_MX') # Generador de datos con localización México
+OUTPUT_FILE = 'historial_ventas_2023_2025.sql'
+FECHA_INICIO = datetime(2023, 1, 1)
+FECHA_FIN = datetime(2025, 12, 8)
 
-# --- FUNCIONES AUXILIARES ---
+fake = Faker('es_MX')
 
-def connect():
-    """Establece conexión con la BD"""
-    return psycopg2.connect(**DB_CONFIG)
+# --- CLASE GENERADORA ---
 
-def fetch_ids(cursor, table_name, id_column):
-    """Obtiene una lista de IDs existentes de una tabla"""
-    cursor.execute(f"SELECT {id_column} FROM {table_name};")
-    return [row[0] for row in cursor.fetchall()]
-
-def fetch_products_with_prices(cursor):
-    """Obtiene diccionario {id: precio} de productos existentes"""
-    cursor.execute("SELECT producto_id, precio_unitario FROM producto WHERE es_paquete = FALSE;")
-    return {row[0]: row[1] for row in cursor.fetchall()}
-
-# --- GENERADORES DE DATOS ---
-
-def generar_catalogos_faltantes(conn):
-    """Rellena tablas pequeñas si están vacías (Roles, Areas, Metodos)"""
-    cur = conn.cursor()
-    
-    # 1. ROLES
-    roles = ['Mesero', 'Cajero', 'Gerente', 'Cocinero', 'Hostess']
-    cur.execute("SELECT count(*) FROM rol;")
-    if cur.fetchone()[0] == 0:
-        print("Generando Roles...")
-        for rol in roles:
-            cur.execute("INSERT INTO rol (nombre, descripcion) VALUES (%s, %s)", (rol, f"Personal de {rol}"))
-    
-    # 2. AREAS COCINA
-    areas_cocina = [('Cocina Caliente', 'General'), ('Barra Bebidas', 'Barra'), ('Plancha', 'Cocina')]
-    cur.execute("SELECT count(*) FROM area_cocina;")
-    if cur.fetchone()[0] == 0:
-        print("Generando Areas de Cocina...")
-        for nombre, tipo in areas_cocina:
-            cur.execute("INSERT INTO area_cocina (nombre, tipo_area) VALUES (%s, %s)", (nombre, tipo))
-
-    # 3. METODOS DE PAGO
-    metodos = [('Efectivo', True), ('Tarjeta Débito', False), ('Tarjeta Crédito', False), ('Transferencia', False)]
-    cur.execute("SELECT count(*) FROM metodo_pago;")
-    if cur.fetchone()[0] == 0:
-        print("Generando Métodos de Pago...")
-        for nombre, efectivo in metodos:
-            cur.execute("INSERT INTO metodo_pago (nombre, es_efectivo, referencia) VALUES (%s, %s, %s)", (nombre, efectivo, 'General'))
-
-    # 4. AREAS DE IMPRESION
-    areas_imp = [('Caja Principal', 'Caja'), ('Cocina General', 'Cocina'), ('Barra', 'Barra')]
-    cur.execute("SELECT count(*) FROM area_impresion;")
-    if cur.fetchone()[0] == 0:
-        print("Generando Areas de Impresión...")
-        for nombre, tipo in areas_imp:
-            cur.execute("INSERT INTO area_impresion (nombre, ip, tipo_impresora) VALUES (%s, %s, %s)", 
-                        (nombre, fake.ipv4_private(), 'Termica 80mm'))
-
-    conn.commit()
-    cur.close()
-
-def generar_infraestructura_sucursal(conn, sucursal_id):
-    """Crea empleados, áreas de venta, mesas y dispositivos para una sucursal"""
-    cur = conn.cursor()
-    
-    # Obtener IDs necesarios
-    roles_ids = fetch_ids(cur, 'rol', 'rol_id')
-    area_imp_ids = fetch_ids(cur, 'area_impresion', 'area_impresion_id')
-    
-    # 1. EMPLEADOS (5 a 10 por sucursal)
-    print(f"  -> Contratando empleados para sucursal {sucursal_id}...")
-    empleados_ids = []
-    for _ in range(random.randint(5, 10)):
-        rol_random = random.choice(roles_ids)
-        cur.execute("""
-            INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
-            VALUES (%s, %s, %s, %s, %s, TRUE) RETURNING empleado_id
-        """, (sucursal_id, rol_random, fake.first_name(), fake.last_name(), 'hash_password'))
-        empleados_ids.append(cur.fetchone()[0])
-
-    # 2. AREAS DE VENTA Y MESAS
-    print(f"  -> Construyendo mesas para sucursal {sucursal_id}...")
-    nombres_areas = ['Salón Principal', 'Terraza', 'Privado']
-    for nombre_area in nombres_areas:
-        # Crear Area
-        cur.execute("INSERT INTO areaventa (sucursal_id, nombre) VALUES (%s, %s) RETURNING area_id", 
-                    (sucursal_id, nombre_area))
-        area_id = cur.fetchone()[0]
+class GeneradorHistorico:
+    def __init__(self):
+        self.conn = None
+        self.cur = None
+        self.ids_sucursales = []
+        self.empleados_por_sucursal = {} # {sucursal_id: [emp_id, ...]}
+        self.mesas_por_sucursal = {}     # {sucursal_id: [mesa_id, ...]}
+        self.productos = {}              # {id: precio}
+        self.metodos_pago = []
         
-        # Crear Mesas (3 a 8 por área)
-        for i in range(1, random.randint(3, 8)):
-            cur.execute("INSERT INTO mesa (area_id, num_mesa, estado) VALUES (%s, %s, 'libre')", (area_id, i))
+        # Contadores para simular SERIAL
+        self.contadores = {
+            'sesion': 0, 'cuenta': 0, 'comensal': 0, 
+            'detalle_cuenta': 0, 'pago': 0, 'detalle_pago': 0
+        }
 
-    # 3. DISPOSITIVOS
-    print(f"  -> Instalando dispositivos...")
-    modelos = ['iPad', 'Lenovo Tab', 'Posiflex']
-    for _ in range(3):
-        cur.execute("""
-            INSERT INTO dispositivo (area_impresion_id, tipo, estado, modelo)
-            VALUES (%s, 'Tablet Comandera', 'activo', %s)
-        """, (random.choice(area_imp_ids), random.choice(modelos)))
+    def conectar_y_cargar_contexto(self):
+        """Lee la BD para obtener IDs válidos y el punto de partida de los contadores"""
+        print("Conectando a la base de datos para leer contexto...")
+        try:
+            self.conn = psycopg2.connect(**DB_CONFIG)
+            self.cur = self.conn.cursor()
 
-    conn.commit()
-    cur.close()
-    return empleados_ids
+            # 1. Obtener Sucursales
+            self.cur.execute("SELECT sucursal_id FROM sucursal")
+            self.ids_sucursales = [r[0] for r in self.cur.fetchall()]
 
-def simular_operaciones(conn, sucursal_id):
-    """Genera flujo operativo: Sesiones, Cuentas, Pedidos, Pagos"""
-    cur = conn.cursor()
-    
-    # Obtener datos de contexto
-    empleados = fetch_ids(cur, 'empleado', 'empleado_id') # Filtrar por sucursal idealmente, pero simplificado aquí
-    dispositivos = fetch_ids(cur, 'dispositivo', 'dispositivo_id')
-    mesas = fetch_ids(cur, 'mesa', 'mesa_id') # Deberían filtrarse por las areas de ESTA sucursal
-    productos_dict = fetch_products_with_prices(cur) # {id: precio}
-    metodos_pago = fetch_ids(cur, 'metodo_pago', 'metodo_id')
-    areas_cocina = fetch_ids(cur, 'area_cocina', 'area_cocina_id')
-    
-    if not productos_dict:
-        print("ADVERTENCIA: No hay productos en la BD. Saltando simulación de ventas.")
-        return
+            if not self.ids_sucursales:
+                raise Exception("No hay sucursales. Corre tus scripts de estructura primero.")
 
-    # SIMULAR 5 SESIONES (TURNOS)
-    print(f"  -> Simulando operaciones diarias en sucursal {sucursal_id}...")
-    
-    for _ in range(5): 
-        # 1. ABRIR SESIÓN
-        empleado_turno = random.choice(empleados)
-        dispositivo_turno = random.choice(dispositivos)
-        inicio_sesion = fake.date_time_between(start_date='-30d', end_date='now')
+            # 2. Obtener Empleados y Mesas por Sucursal
+            for suc_id in self.ids_sucursales:
+                # Empleados
+                self.cur.execute(f"SELECT empleado_id FROM empleado WHERE sucursal_id = {suc_id}")
+                self.empleados_por_sucursal[suc_id] = [r[0] for r in self.cur.fetchall()]
+                
+                # Mesas
+                self.cur.execute(f"""
+                    SELECT m.mesa_id FROM mesa m 
+                    JOIN areaventa a ON m.area_id = a.area_id 
+                    WHERE a.sucursal_id = {suc_id}
+                """)
+                self.mesas_por_sucursal[suc_id] = [r[0] for r in self.cur.fetchall()]
+
+            # 3. Obtener Productos y Precios
+            self.cur.execute("SELECT producto_id, precio_unitario FROM producto WHERE es_paquete = FALSE")
+            self.productos = {r[0]: r[1] for r in self.cur.fetchall()}
+
+            # 4. Obtener Métodos de Pago
+            self.cur.execute("SELECT metodo_id FROM metodo_pago")
+            self.metodos_pago = [r[0] for r in self.cur.fetchall()]
+
+            # 5. Obtener MAX IDs actuales para empezar a contar desde ahí
+            tablas = ['sesion', 'cuenta', 'comensal', 'detalle_cuenta', 'pago', 'detalle_pago']
+            for tabla in tablas:
+                col_id = f"{tabla}_id" if tabla != 'detalle_modificador' else 'detalle_modificador'
+                self.cur.execute(f"SELECT COALESCE(MAX({col_id}), 0) FROM {tabla}")
+                self.contadores[tabla] = self.cur.fetchone()[0]
+
+            print("Contexto cargado exitosamente.")
+            print(f"Iniciando contadores en: {self.contadores}")
+
+        except Exception as e:
+            print(f"Error al leer BD: {e}")
+            exit()
+        finally:
+            if self.conn: self.conn.close()
+
+    def generar_sql(self):
+        print(f"Generando archivo SQL desde {FECHA_INICIO.date()} hasta {FECHA_FIN.date()}...")
         
-        cur.execute("""
-            INSERT INTO sesion (empleado_id, dispositivo_id, fecha_hora_apertura, efectivo_inicial, estado)
-            VALUES (%s, %s, %s, %s, 'cerrada') RETURNING sesion_id
-        """, (empleado_turno, dispositivo_turno, inicio_sesion, Decimal(random.randint(500, 2000))))
-        sesion_id = cur.fetchone()[0]
+        with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+            f.write("-- SCRIPT GENERADO AUTOMATICAMENTE\n")
+            f.write("-- Historial de ventas 2023 - 2025\n")
+            f.write("BEGIN;\n\n") # Iniciar transacción
 
-        # 2. GENERAR CUENTAS EN ESA SESIÓN (3 a 8 cuentas por turno)
-        for _ in range(random.randint(3, 8)):
-            mesa_random = random.choice(mesas)
-            fecha_cuenta = inicio_sesion + timedelta(minutes=random.randint(10, 300))
+            fecha_actual = FECHA_INICIO
             
-            # Crear Cuenta
-            cur.execute("""
-                INSERT INTO cuenta (fecha_hora_inicio, fecha_hora_cierre, estado)
-                VALUES (%s, %s, FALSE) RETURNING cuenta_id
-            """, (fecha_cuenta, fecha_cuenta + timedelta(hours=1)))
-            cuenta_id = cur.fetchone()[0]
+            while fecha_actual <= FECHA_FIN:
+                dia_semana = fecha_actual.weekday() # 0=Lunes, 6=Domingo
+                
+                # Lógica de volumen: Fin de semana vende más
+                if dia_semana >= 4: # Viernes, Sabado, Domingo
+                    probabilidad_venta = 1.0 
+                    num_cuentas_base = random.randint(15, 30)
+                else:
+                    probabilidad_venta = 0.8 # A veces no se abre o se vende poco
+                    num_cuentas_base = random.randint(5, 12)
 
-            # Asignar Mesa
-            cur.execute("INSERT INTO cuentaMesa (cuenta_id, mesa_id) VALUES (%s, %s)", (cuenta_id, mesa_random))
+                print(f"Procesando fecha: {fecha_actual.date()}", end='\r')
 
-            # Crear Comensales (1 a 4 personas)
-            total_cuenta = Decimal(0)
-            
-            for i in range(1, random.randint(2, 5)):
-                nombre_comensal = f"Comensal {i}"
-                cur.execute("INSERT INTO comensal (cuenta_id, nombre_etiqueta) VALUES (%s, %s) RETURNING comensal_id",
-                            (cuenta_id, nombre_comensal))
-                comensal_id = cur.fetchone()[0]
+                for suc_id in self.ids_sucursales:
+                    empleados = self.empleados_por_sucursal.get(suc_id, [])
+                    mesas = self.mesas_por_sucursal.get(suc_id, [])
 
-                # Pedir Productos (1 a 3 productos por persona)
-                for _ in range(random.randint(1, 3)):
-                    prod_id = random.choice(list(productos_dict.keys()))
-                    precio = productos_dict[prod_id]
-                    cantidad = 1 # Simplificado
+                    if not empleados or not mesas:
+                        continue # Si no hay datos base, saltar
+
+                    # 1. ABRIR SESIÓN (Una por día por sucursal, simulado)
+                    self.contadores['sesion'] += 1
+                    sesion_id = self.contadores['sesion']
+                    emp_sesion = random.choice(empleados)
+                    inicio_sesion = fecha_actual.replace(hour=random.randint(8,11), minute=0)
                     
-                    # Insertar Detalle Cuenta
-                    cur.execute("""
-                        INSERT INTO detalle_cuenta (comensal_id, producto_id, cantidad, precio_unitario)
-                        VALUES (%s, %s, %s, %s) RETURNING detalle_id
-                    """, (comensal_id, prod_id, cantidad, precio))
-                    detalle_id = cur.fetchone()[0]
-                    
-                    total_cuenta += (precio * cantidad)
+                    # SQL Sesion
+                    f.write(f"INSERT INTO sesion (sesion_id, empleado_id, dispositivo_id, fecha_hora_apertura, estado) "
+                            f"VALUES ({sesion_id}, {emp_sesion}, 1, '{inicio_sesion}', 'cerrada');\n")
 
-                    # Enviar a Cocina (Historial Preparación)
-                    cur.execute("""
-                        INSERT INTO historial_preparacion (detalle_id, area_cocina_id, estado, fecha_hora_preparacion)
-                        VALUES (%s, %s, 'terminado', %s)
-                    """, (detalle_id, random.choice(areas_cocina), fecha_cuenta + timedelta(minutes=15)))
+                    # 2. GENERAR CUENTAS
+                    for _ in range(num_cuentas_base):
+                        # Hora aleatoria dentro del día operativo
+                        hora_apertura = inicio_sesion + timedelta(minutes=random.randint(0, 600))
+                        hora_cierre = hora_apertura + timedelta(minutes=random.randint(30, 90))
+                        
+                        self.contadores['cuenta'] += 1
+                        cuenta_id = self.contadores['cuenta']
+                        
+                        # SQL Cuenta
+                        f.write(f"INSERT INTO cuenta (cuenta_id, fecha_hora_inicio, fecha_hora_cierre, estado) "
+                                f"VALUES ({cuenta_id}, '{hora_apertura}', '{hora_cierre}', FALSE);\n")
+                        
+                        # SQL CuentaMesa
+                        mesa_random = random.choice(mesas)
+                        f.write(f"INSERT INTO cuentaMesa (cuenta_id, mesa_id) VALUES ({cuenta_id}, {mesa_random});\n")
 
-            # 3. PAGAR LA CUENTA
-            metodo = random.choice(metodos_pago)
-            propina = total_cuenta * Decimal(0.10)
+                        # 3. COMENSALES Y PEDIDOS
+                        total_cuenta = Decimal(0)
+                        num_personas = random.randint(1, 5)
+                        
+                        for p in range(num_personas):
+                            self.contadores['comensal'] += 1
+                            comensal_id = self.contadores['comensal']
+                            
+                            # SQL Comensal
+                            f.write(f"INSERT INTO comensal (comensal_id, cuenta_id, nombre_etiqueta) "
+                                    f"VALUES ({comensal_id}, {cuenta_id}, 'Comensal {p+1}');\n")
+
+                            # Pedidos del comensal
+                            for _ in range(random.randint(1, 3)): # 1 a 3 items por persona
+                                prod_id = random.choice(list(self.productos.keys()))
+                                precio = self.productos[prod_id]
+                                cantidad = 1
+                                
+                                self.contadores['detalle_cuenta'] += 1
+                                detalle_id = self.contadores['detalle_cuenta']
+                                
+                                # SQL Detalle
+                                f.write(f"INSERT INTO detalle_cuenta (detalle_id, comensal_id, producto_id, cantidad, precio_unitario) "
+                                        f"VALUES ({detalle_id}, {comensal_id}, {prod_id}, {cantidad}, {precio});\n")
+                                
+                                total_cuenta += (precio * cantidad)
+
+                        # 4. PAGO
+                        if self.metodos_pago:
+                            self.contadores['pago'] += 1
+                            pago_id = self.contadores['pago']
+                            metodo = random.choice(self.metodos_pago)
+                            propina = round(float(total_cuenta) * 0.10, 2)
+                            
+                            # SQL Pago
+                            f.write(f"INSERT INTO pago (pago_id, metodo_id, fecha_hora, monto, propina) "
+                                    f"VALUES ({pago_id}, {metodo}, '{hora_cierre}', {total_cuenta}, {propina});\n")
+                            
+                            # SQL Detalle Pago (Relación)
+                            # Nota: Asumimos que la tabla detalle_pago tiene IDs seriales, pero aquí necesitamos relacionar
+                            f.write(f"INSERT INTO detalle_pago (cuenta_id, pago_id) VALUES ({cuenta_id}, {pago_id});\n")
+
+                # Avanzar día
+                fecha_actual += timedelta(days=1)
             
-            cur.execute("""
-                INSERT INTO pago (metodo_id, fecha_hora, monto, propina)
-                VALUES (%s, %s, %s, %s) RETURNING pago_id
-            """, (metodo, fecha_cuenta + timedelta(hours=1), total_cuenta, propina))
-            pago_id = cur.fetchone()[0]
-
-            # Detalle Pago (Relación Cuenta-Pago)
-            cur.execute("""
-                INSERT INTO detalle_pago (cuenta_id, pago_id) VALUES (%s, %s)
-            """, (cuenta_id, pago_id))
-
-    conn.commit()
-    cur.close()
-
-# --- EJECUCIÓN PRINCIPAL ---
-
-def main():
-    try:
-        conn = connect()
-        print("Conexión exitosa. Iniciando rellenado de datos...")
+            # Ajustar las secuencias de PostgreSQL al final para que no fallen los futuros inserts reales
+            f.write("\n-- AJUSTE DE SECUENCIAS (IMPORTANTE)\n")
+            tablas_seq = ['sesion', 'cuenta', 'comensal', 'detalle_cuenta', 'pago']
+            for t in tablas_seq:
+                max_id = self.contadores[t] + 1
+                f.write(f"SELECT setval(pg_get_serial_sequence('{t}', '{t}_id'), {max_id});\n")
+            
+            f.write("\nCOMMIT;\n")
         
-        # 1. Asegurar catálogos básicos
-        generar_catalogos_faltantes(conn)
+        print(f"\n\n¡Listo! Archivo generado: {OUTPUT_FILE}")
+        print("Ahora puedes importar este archivo en tu BD usando:")
+        print(f"psql -U postgres -d nombre_bd -f {OUTPUT_FILE}")
 
-        # 2. Obtener Sucursales existentes (Insertadas por tu script SQL)
-        cur = conn.cursor()
-        ids_sucursales = fetch_ids(cur, 'sucursal', 'sucursal_id')
-        cur.close()
-
-        if not ids_sucursales:
-            print("ERROR: No se encontraron sucursales. Ejecuta tus scripts SQL de inserts primero.")
-            return
-
-        print(f"Se encontraron {len(ids_sucursales)} sucursales.")
-
-        # 3. Loop por sucursal para generar su universo
-        for suc_id in ids_sucursales:
-            print(f"\n--- Procesando Sucursal ID: {suc_id} ---")
-            
-            # Generar mesas, empleados y dispositivos
-            generar_infraestructura_sucursal(conn, suc_id)
-            
-            # Generar ventas y operaciones
-            simular_operaciones(conn, suc_id)
-
-        print("\n¡Proceso finalizado con éxito! Tu base de datos tiene ahora datos transaccionales.")
-
-    except Exception as e:
-        print(f"Ocurrió un error: {e}")
-    finally:
-        if conn:
-            conn.close()
-
+# --- EJECUCIÓN ---
 if __name__ == "__main__":
-    main()
+    app = GeneradorHistorico()
+    app.conectar_y_cargar_contexto()
+    app.generar_sql()

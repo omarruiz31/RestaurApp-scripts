@@ -314,7 +314,7 @@ CREATE TABLE dispositivo(
 );
 
 CREATE TABLE detalle_cuenta(
-    detalle_id SERIAL PRIMARY KEY,
+    detalle_cuenta_id SERIAL PRIMARY KEY,
     comensal_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad  NUMERIC(10,2),
