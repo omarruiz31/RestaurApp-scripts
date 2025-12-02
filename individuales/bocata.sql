@@ -34,7 +34,7 @@ VALUES
 -- 4. INSERTAR MENÚ (Sin sucursal_id)
 INSERT INTO menu (nombre, hora_inicio, hora_fin, activo) 
 VALUES (
-    'Menú General', 
+    'Menú General Bocata', 
     '07:00:00', 
     '23:59:00', 
     TRUE
@@ -42,47 +42,47 @@ VALUES (
 
 -- ==============================================================================
 -- 4.1. VINCULAR MENÚ A SUCURSALES (Tabla Intermedia: sucursal_menu)
--- Vinculamos el "Menú General" a AMBAS sucursales (Centro y Universidad)
+-- Vinculamos el "Menú General Bocata" a AMBAS sucursales (Centro y Universidad)
 -- ==============================================================================
 INSERT INTO sucursal_menu (sucursal_id, menu_id)
 VALUES
 -- Vincular a Centro
 (
     (SELECT sucursal_id FROM sucursal WHERE nombre='La Bocata Centro' LIMIT 1),
-    (SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1)
+    (SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1)
 ),
 -- Vincular a Universidad
 (
     (SELECT sucursal_id FROM sucursal WHERE nombre='La Bocata Universidad' LIMIT 1),
-    (SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1)
+    (SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1)
 );
 
 -- 5. INSERTAR CATEGORÍAS
 INSERT INTO categoria (menu_id, nombre) VALUES 
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Americanos y Espressos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Latte y Capuccino'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Marrocchino'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Tisanas y Tés'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Bebidas Frías'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Jugos y Jarras'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Malteadas y Batidos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Sodas'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Entradas y Quesos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Caldos y Sopas'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Para Compartir'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Ensaladas'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Desayunos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Sandwich y Cuernitos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Antojitos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Platos Fuertes'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Especialidad Italianos'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Pastas y Pizzas'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Pan Dulce y Repostería'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Postres'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Mixología y Licores'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Cervezas'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Temporada y Extras'),
-((SELECT menu_id FROM menu WHERE nombre='Menú General' LIMIT 1), 'Paquetes y Combos');
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Americanos y Espressos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Latte y Capuccino'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Marrocchino'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Tisanas y Tés'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Bebidas Frías'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Jugos y Jarras'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Malteadas y Batidos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Sodas'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Entradas y Quesos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Caldos y Sopas'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Para Compartir'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Ensaladas'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Desayunos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Sandwich y Cuernitos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Antojitos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Platos Fuertes'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Especialidad Italianos'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Pastas y Pizzas'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Pan Dulce y Repostería'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Postres'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Mixología y Licores'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Cervezas'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Temporada y Extras'),
+((SELECT menu_id FROM menu WHERE nombre='Menú General Bocata' LIMIT 1), 'Paquetes y Combos');
 
 -- 6. INSERTAR PRODUCTOS
 -- CAFÉ Y TÉ
@@ -196,3 +196,132 @@ VALUES
 ('2x$110 Margaritas y Mojitos', NULL, 'PRECIO_FIJO_CANTIDAD', 110, '2025-04-01 00:00:00', '2025-04-30 23:59:00', NULL),
 ('2x$497 Jarras Tinto/Sangría', NULL, 'PRECIO_FIJO_CANTIDAD', 497, '2025-04-01 00:00:00', '2025-04-30 23:59:00', NULL),
 ('3x1 Tequilas', NULL, '3X1', 0, '2025-04-01 00:00:00', '2025-04-30 23:59:00', NULL);
+
+/* =========================================================
+   INFRAESTRUCTURA OPERATIVA: LA BOCATA
+   (Roles, Áreas, Mesas, Empleados Reales, Menú)
+   ========================================================= */
+
+-- 1. ASEGURAR ROLES (Si no existen)
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Gerente', 'Gerente de Sucursal' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Gerente');
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Mesero', 'Atención a comensales' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Mesero');
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Cajero', 'Cobro y facturación' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Cajero');
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Cocinero', 'Preparación de alimentos' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Cocinero');
+
+
+-- 2. INSERTAR ÁREAS DE VENTA
+-- Creamos Salón y Terraza para las sucursales de La Bocata
+INSERT INTO areaventa (sucursal_id, nombre)
+SELECT sucursal_id, 'Salón Principal'
+FROM sucursal 
+WHERE nombre LIKE 'La Bocata%'
+AND NOT EXISTS (SELECT 1 FROM areaventa WHERE areaventa.sucursal_id = sucursal.sucursal_id AND nombre = 'Salón Principal');
+
+INSERT INTO areaventa (sucursal_id, nombre)
+SELECT sucursal_id, 'Terraza'
+FROM sucursal 
+WHERE nombre LIKE 'La Bocata%'
+AND NOT EXISTS (SELECT 1 FROM areaventa WHERE areaventa.sucursal_id = sucursal.sucursal_id AND nombre = 'Terraza');
+
+
+-- 3. INSERTAR MESAS
+-- A. Mesas Salón Principal (1-10)
+INSERT INTO mesa (area_id, num_mesa, estado)
+SELECT av.area_id, s.num, 'libre'
+FROM areaventa av
+JOIN sucursal suc ON av.sucursal_id = suc.sucursal_id
+CROSS JOIN generate_series(1, 10) AS s(num)
+WHERE suc.nombre LIKE 'La Bocata%' AND av.nombre = 'Salón Principal'
+AND NOT EXISTS (SELECT 1 FROM mesa m WHERE m.area_id = av.area_id AND m.num_mesa = s.num);
+
+-- B. Mesas Terraza (11-15)
+INSERT INTO mesa (area_id, num_mesa, estado)
+SELECT av.area_id, s.num, 'libre'
+FROM areaventa av
+JOIN sucursal suc ON av.sucursal_id = suc.sucursal_id
+CROSS JOIN generate_series(11, 15) AS s(num)
+WHERE suc.nombre LIKE 'La Bocata%' AND av.nombre = 'Terraza'
+AND NOT EXISTS (SELECT 1 FROM mesa m WHERE m.area_id = av.area_id AND m.num_mesa = s.num);
+
+
+-- =========================================================
+-- 4. INSERTAR EMPLEADOS CON NOMBRES REALES
+-- =========================================================
+
+-- A. GERENTES (1 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1),
+    (ARRAY['Luis', 'Carmen', 'Roberto', 'Fernanda', 'Javier', 'Adriana'])[floor(random()*6 + 1)],
+    (ARRAY['Mendez', 'Vega', 'Castillo', 'Solis', 'Fuentes', 'Ortiz'])[floor(random()*6 + 1)],
+    'adminbocata',
+    TRUE
+FROM sucursal s
+WHERE s.nombre LIKE 'La Bocata%'
+AND NOT EXISTS (
+    SELECT 1 FROM empleado e 
+    WHERE e.sucursal_id = s.sucursal_id 
+    AND e.rol_id = (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1)
+);
+
+-- B. MESEROS (3 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Mesero' LIMIT 1),
+    (ARRAY['Hugo', 'Paco', 'Luis', 'Ana', 'Maria', 'Sofia', 'Lucia', 'Diego', 'Carlos', 'Elena'])[floor(random()*10 + 1)],
+    (ARRAY['Lopez', 'Perez', 'Garcia', 'Sanchez', 'Romero', 'Diaz', 'Torres', 'Ruiz', 'Alvarez', 'Vargas'])[floor(random()*10 + 1)],
+    'meserobocata',
+    TRUE
+FROM sucursal s
+CROSS JOIN generate_series(1, 3) AS serie
+WHERE s.nombre LIKE 'La Bocata%';
+
+-- C. COCINEROS (2 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Cocinero' LIMIT 1),
+    (ARRAY['Miguel', 'Angel', 'Jose', 'Ramon', 'David', 'Daniel'])[floor(random()*6 + 1)],
+    (ARRAY['Gutierrez', 'Chavez', 'Ramos', 'Flores', 'Acosta', 'Silva'])[floor(random()*6 + 1)],
+    'cocinabocata',
+    TRUE
+FROM sucursal s
+CROSS JOIN generate_series(1, 2) AS serie
+WHERE s.nombre LIKE 'La Bocata%';
+
+-- D. CAJEROS (1 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1),
+    (ARRAY['Patricia', 'Laura', 'Diana', 'Monica', 'Rosa'])[floor(random()*5 + 1)],
+    (ARRAY['Morales', 'Rivera', 'Reyes', 'Jimenez', 'Molina'])[floor(random()*5 + 1)],
+    'cajabocata',
+    TRUE
+FROM sucursal s
+WHERE s.nombre LIKE 'La Bocata%'
+AND NOT EXISTS (
+    SELECT 1 FROM empleado e 
+    WHERE e.sucursal_id = s.sucursal_id 
+    AND e.rol_id = (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1)
+);
+
+
+-- 5. RELACIÓN SUCURSAL - MENÚ
+-- Vinculamos el 'Menú General Bocata' a las sucursales de La Bocata
+INSERT INTO sucursal_menu (sucursal_id, menu_id)
+SELECT s.sucursal_id, m.menu_id
+FROM sucursal s
+CROSS JOIN menu m
+WHERE s.nombre LIKE 'La Bocata%' 
+AND m.nombre = 'Menú General Bocata'
+AND NOT EXISTS (
+    SELECT 1 FROM sucursal_menu sm 
+    WHERE sm.sucursal_id = s.sucursal_id AND sm.menu_id = m.menu_id
+);

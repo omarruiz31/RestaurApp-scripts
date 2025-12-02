@@ -1,0 +1,130 @@
+:root {
+    --primary: #2c3e50;
+    --secondary: #34495e;
+    --accent: #3498db;
+    --free: #27ae60;
+    --busy: #c0392b;
+    --bg: #f4f7f6;
+}
+
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: var(--bg); }
+header { background-color: var(--primary); color: white; padding: 1rem; display: flex; justify_content: space-between; align-items: center; }
+h1 { margin: 0; font-size: 1.5rem; }
+.hidden { display: none !important; }
+
+button { cursor: pointer; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; }
+#btn-volver { background: rgba(255,255,255,0.2); color: white; }
+.btn-refresh { background: var(--accent); color: white; }
+
+main { padding: 20px; max-width: 1200px; margin: 0 auto; }
+h2 { color: var(--secondary); border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+
+/* Grid Cards */
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+.card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; border-left: 5px solid var(--accent); }
+.card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.card h3 { margin-top: 0; color: var(--primary); }
+.card p { color: #666; margin-bottom: 0; }
+
+/* Mesas Grid */
+.mesas-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+.mesa-card { background: white; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+
+/* Estados Mesa */
+.mesa-libre { border-top: 5px solid var(--free); }
+.mesa-libre .status { color: var(--free); font-weight: bold; }
+
+.mesa-ocupada { border-top: 5px solid var(--busy); background-color: #fff0f0; }
+.mesa-ocupada .status { color: var(--busy); font-weight: bold; }
+
+.mesa-num { font-size: 1.5rem; font-weight: bold; color: var(--primary); display: block; margin-bottom: 5px; }
+.mesa-info { font-size: 0.85rem; color: #555; }
+.mesa-total { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin-top: 8px; display: block; }
+
+:root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --free: #27ae60;
+    --busy: #c0392b;
+    --bg: #f4f7f6;
+}
+/* ... (MANTENER ESTILOS PREVIOS DE HEADER, GRID, CARDS) ... */
+/* Asegúrate de copiar todo lo anterior y agregar esto al final */
+
+body { font-family: sans-serif; margin: 0; background: var(--bg); }
+.hidden { display: none !important; }
+/* ... (Estilos previos de grid-container, card, mesa-card) ... */
+
+/* ESTILOS DEL MODAL */
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: white; padding: 25px; border-radius: 8px;
+    width: 300px; text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.modal-content h3 { margin-top: 0; color: var(--primary); }
+
+/* Botones del Modal */
+.btn-action {
+    display: block; width: 100%; padding: 12px; margin: 10px 0;
+    border: none; border-radius: 5px; cursor: pointer;
+    font-size: 1rem; color: white; font-weight: bold;
+}
+.btn-open { background-color: var(--free); }
+.btn-close { background-color: var(--accent); }
+.btn-delete { background-color: var(--busy); }
+
+.btn-cancel {
+    background: transparent; border: 1px solid #ccc; color: #555;
+    padding: 8px 15px; margin-top: 10px; cursor: pointer; border-radius: 4px;
+}
+.btn-cancel:hover { background: #eee; }
+
+/* Hacer clic en mesas */
+.mesa-card { cursor: pointer; transition: transform 0.1s; }
+.mesa-card:hover { transform: scale(1.05); }
+
+/* ... Estilos anteriores ... */
+
+.input-form {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+.panel-pedido {
+    background-color: #f0f8ff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.panel-pedido label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.btn-mini-add {
+    width: 100%;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.btn-mini-add:hover { background-color: #2980b9; }
+
+hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }

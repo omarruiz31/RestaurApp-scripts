@@ -12,10 +12,7 @@ INSERT INTO sucursal (restaurante_id, nombre, direccion, region, telefono)
 VALUES
 ((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Coatzacoalcos', 'Av. Universidad #105, Coatzacoalcos, Veracruz', 'Sur de Veracruz', '9211234567'),
 ((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Córdoba', 'Plaza Shangri-La, Córdoba, Veracruz', 'Centro de Veracruz', '2711234567'),
-((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Concordia', 'Plaza Concordia, Xalapa, Veracruz', 'Xalapa', '2281234567'),
 ((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Poliforum', 'Av. Lázaro Cárdenas, Frente al Velódromo, Xalapa, Veracruz', 'Xalapa', '2287654321'),
-((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Ruiz Cortines', 'Av. Ruiz Cortines #2400, Boca del Río, Veracruz', 'Zona Conurbada', '2291234567'),
-((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Plaza View', 'Plaza View, Boca del Río, Veracruz', 'Zona Conurbada', '2297654321'),
 ((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Puebla', 'Zona Angelópolis, Puebla, Puebla', 'Puebla', '2221234567'),
 ((SELECT restaurante_id FROM restaurante WHERE nombre='Madison Grill' LIMIT 1), 'Madison Grill Xalapa', 'Av. Araucarias, Plaza Las Américas, Xalapa, Veracruz', 'Xalapa', '2281112222');
 
@@ -249,4 +246,115 @@ INSERT INTO producto_componente (id_producto_padre, id_producto_hijo, cantidad) 
  (SELECT producto_id FROM producto WHERE nombre='Arrachera (3-4 prs.) 1 kg' LIMIT 1),
  (SELECT producto_id FROM producto WHERE nombre='Arrachera 330 gr' LIMIT 1),
  3
+);
+
+/* =========================================================
+   INFRAESTRUCTURA OPERATIVA: MADISON GRILL
+   Roles, Empleados, Áreas, Mesas y Vinculación de Menú
+   ========================================================= */
+
+/* =========================================================
+   INFRAESTRUCTURA OPERATIVA: MADISON GRILL
+   Roles, Empleados con Nombres Reales, Áreas, Mesas
+   ========================================================= */
+
+-- 1. INSERTAR ROLES (Si no existen)
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Gerente', 'Gerente de Sucursal' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Gerente');
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Mesero', 'Atención a comensales' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Mesero');
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Cajero', 'Cobro y facturación' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Cajero');
+INSERT INTO rol (nombre, descripcion)
+SELECT 'Cocinero', 'Preparación de alimentos' WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = 'Cocinero');
+
+-- 2. INSERTAR ÁREAS DE VENTA
+INSERT INTO areaventa (sucursal_id, nombre)
+SELECT sucursal_id, 'Salón Principal' FROM sucursal WHERE nombre LIKE 'Madison Grill%';
+
+INSERT INTO areaventa (sucursal_id, nombre)
+SELECT sucursal_id, 'Terraza' FROM sucursal WHERE nombre LIKE 'Madison Grill%';
+
+-- 3. INSERTAR MESAS
+-- A. Mesas Salón Principal (1-10)
+INSERT INTO mesa (area_id, num_mesa, estado)
+SELECT av.area_id, s.num, 'libre'
+FROM areaventa av
+JOIN sucursal suc ON av.sucursal_id = suc.sucursal_id
+CROSS JOIN generate_series(1, 10) AS s(num)
+WHERE suc.nombre LIKE 'Madison Grill%' AND av.nombre = 'Salón Principal';
+
+-- B. Mesas Terraza (11-15)
+INSERT INTO mesa (area_id, num_mesa, estado)
+SELECT av.area_id, s.num, 'libre'
+FROM areaventa av
+JOIN sucursal suc ON av.sucursal_id = suc.sucursal_id
+CROSS JOIN generate_series(11, 15) AS s(num)
+WHERE suc.nombre LIKE 'Madison Grill%' AND av.nombre = 'Terraza';
+
+-- =========================================================
+-- 4. INSERTAR EMPLEADOS CON NOMBRES REALES
+-- =========================================================
+
+-- A. GERENTES (1 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1),
+    (ARRAY['Carlos', 'Roberto', 'Ana', 'Laura', 'Miguel', 'Sofia', 'Jorge', 'Patricia'])[floor(random()*8 + 1)],
+    (ARRAY['Hernández', 'García', 'Martínez', 'López', 'González', 'Pérez', 'Rodríguez', 'Sánchez'])[floor(random()*8 + 1)],
+    'admin123',
+    TRUE
+FROM sucursal s
+WHERE s.nombre LIKE 'Madison Grill%';
+
+-- B. MESEROS (3 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Mesero' LIMIT 1),
+    (ARRAY['Juan', 'Pedro', 'Maria', 'Luisa', 'Diego', 'Carmen', 'Raul', 'Elena', 'Fernando', 'Lucia', 'Ricardo', 'Teresa'])[floor(random()*12 + 1)],
+    (ARRAY['Ramirez', 'Torres', 'Flores', 'Rivera', 'Gomez', 'Diaz', 'Cruz', 'Morales', 'Ortiz', 'Gutierrez', 'Chavez', 'Ramos'])[floor(random()*12 + 1)],
+    'mesero123',
+    TRUE
+FROM sucursal s
+CROSS JOIN generate_series(1, 3) AS serie
+WHERE s.nombre LIKE 'Madison Grill%';
+
+-- C. COCINEROS (2 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Cocinero' LIMIT 1),
+    (ARRAY['Jose', 'Antonio', 'Francisco', 'Manuel', 'Javier', 'David', 'Daniel', 'Alejandro'])[floor(random()*8 + 1)],
+    (ARRAY['Castillo', 'Jimenez', 'Moreno', 'Romero', 'Alvarez', 'Molina', 'Ruiz', 'Delgado'])[floor(random()*8 + 1)],
+    'cocina123',
+    TRUE
+FROM sucursal s
+CROSS JOIN generate_series(1, 2) AS serie
+WHERE s.nombre LIKE 'Madison Grill%';
+
+-- D. CAJEROS (1 por sucursal)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+SELECT 
+    s.sucursal_id,
+    (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1),
+    (ARRAY['Gabriela', 'Veronica', 'Silvia', 'Monica', 'Adriana', 'Rosa', 'Isabel', 'Pilar'])[floor(random()*8 + 1)],
+    (ARRAY['Vega', 'Campos', 'Mendez', 'Guzman', 'Vargas', 'Reyes', 'Aguilar', 'Rojas'])[floor(random()*8 + 1)],
+    'caja123',
+    TRUE
+FROM sucursal s
+WHERE s.nombre LIKE 'Madison Grill%';
+
+
+-- 5. RELACIÓN SUCURSAL - MENÚ
+INSERT INTO sucursal_menu (sucursal_id, menu_id)
+SELECT s.sucursal_id, m.menu_id
+FROM sucursal s
+CROSS JOIN menu m
+WHERE s.nombre LIKE 'Madison Grill%' 
+AND m.nombre = 'Menú Principal Coatzacoalcos'
+AND NOT EXISTS (
+    SELECT 1 FROM sucursal_menu sm 
+    WHERE sm.sucursal_id = s.sucursal_id AND sm.menu_id = m.menu_id
 );

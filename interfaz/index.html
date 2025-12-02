@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestaurApp - Gestión de Cuentas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>RestaurApp Monitor</h1>
+        <button id="btn-volver" class="hidden" onclick="goBack()">⬅ Volver</button>
+    </header>
+
+    <main id="app-container">
+        <section id="view-restaurantes">
+            <h2>Selecciona un Restaurante</h2>
+            <div class="grid-container" id="list-restaurantes"></div>
+        </section>
+
+        <section id="view-sucursales" class="hidden">
+            <h2 id="title-sucursales">Sucursales</h2>
+            <div class="grid-container" id="list-sucursales"></div>
+        </section>
+
+        <section id="view-mesas" class="hidden">
+            <div class="monitor-header">
+                <h2 id="title-mesas">Monitor de Mesas</h2>
+                <button onclick="refreshMesas()" class="btn-refresh">↻ Actualizar</button>
+            </div>
+            <div id="grid-mesas" class="mesas-container"></div>
+        </section>
+    </main>
+
+    <div id="modal-overlay" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-titulo">Gestionar Mesa</h3>
+            <p id="modal-desc">Opciones:</p>
+            
+            <div id="acciones-libre" class="hidden">
+                <label style="display:block; text-align:left; font-size:0.9rem; color:#555;">Número de Personas:</label>
+                <input type="number" id="inp-comensales" value="2" min="1" max="20" class="input-form">
+                <button class="btn-action btn-open" onclick="accionAbrirCuenta()">➕ Abrir Mesa</button>
+            </div>
+
+            <div id="acciones-ocupada" class="hidden">
+                <div class="panel-pedido">
+                    <label>Agregar Producto:</label>
+                    <select id="sel-productos" class="input-form">
+                        <option>Cargando menú...</option>
+                    </select>
+                    <button class="btn-mini-add" onclick="accionAgregarProducto()">Añadir</button>
+                </div>
+                <hr>
+                <button class="btn-action btn-close" onclick="accionCerrarCuenta()">💰 Cobrar y Cerrar</button>
+                <button class="btn-action btn-delete" onclick="accionCancelarCuenta()">🗑 Cancelar Cuenta</button>
+            </div>
+
+            <button class="btn-cancel" onclick="cerrarModal()">Cancelar / Salir</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
