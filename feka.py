@@ -165,11 +165,11 @@ class GeneradorHistorico:
                                 cantidad = 1
                                 
                                 self.contadores['detalle_cuenta'] += 1
-                                detalle_id = self.contadores['detalle_cuenta']
+                                detalle_cuenta_id = self.contadores['detalle_cuenta']
                                 
                                 # SQL Detalle
-                                f.write(f"INSERT INTO detalle_cuenta (detalle_id, comensal_id, producto_id, cantidad, precio_unitario) "
-                                        f"VALUES ({detalle_id}, {comensal_id}, {prod_id}, {cantidad}, {precio});\n")
+                                f.write(f"INSERT INTO detalle_cuenta (detalle_cuenta_id, comensal_id, producto_id, cantidad, precio_unitario) "
+                                        f"VALUES ({detalle_cuenta_id}, {comensal_id}, {prod_id}, {cantidad}, {precio});\n")
                                 
                                 total_cuenta += (precio * cantidad)
 

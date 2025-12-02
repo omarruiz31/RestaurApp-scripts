@@ -336,14 +336,14 @@ CREATE TABLE detalle_cuenta(
 
 CREATE TABLE detalle_modificador(
     detalle_modificador SERIAL  PRIMARY KEY,
-    detalle_id INT NOT NULL,
+    detalle_cuenta_id INT NOT NULL,
     modificador_id INT,
     cantidad NUMERIC(10,2) NOT NULL DEFAULT 1,
     precio_unitario NUMERIC(10,2) NOT NULL,
 
     CONSTRAINT fk_dm_detalle
-        FOREIGN KEY(detalle_id)
-        REFERENCES detalle_cuenta(detalle_id)
+        FOREIGN KEY(detalle_cuenta_id)
+        REFERENCES detalle_cuenta(detalle_cuenta_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
@@ -356,15 +356,15 @@ CREATE TABLE detalle_modificador(
 
 CREATE TABLE detalle_promocion(
 
-    detalle_id INT NOT NULL,
+    detalle_cuenta_id INT NOT NULL,
     promocion_id INT NOT NULL,
 
     CONSTRAINT pk_detalle_promocion
-    PRIMARY KEY(detalle_id,promocion_id),
+    PRIMARY KEY(detalle_cuenta_id,promocion_id),
 
     CONSTRAINT fk_detalle
-    FOREIGN KEY (detalle_id)
-    REFERENCES detalle_cuenta(detalle_id),
+    FOREIGN KEY (detalle_cuenta_id)
+    REFERENCES detalle_cuenta(detalle_cuenta_id),
 
     CONSTRAINT fk_promocion
     FOREIGN KEY(promocion_id)
@@ -406,14 +406,14 @@ CREATE TABLE area_cocina (
 
 CREATE TABLE historial_preparacion(
     historial_preparacion_id SERIAL PRIMARY KEY,
-    detalle_id INT NOT NULL,
+    detalle_cuenta_id INT NOT NULL,
     area_cocina_id INT NOT NULL,
     estado VARCHAR(100) NOT NULL,
     fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_detalle
-    FOREIGN KEY(detalle_id)
-    REFERENCES detalle_cuenta(detalle_id)
+    FOREIGN KEY(detalle_cuenta_id)
+    REFERENCES detalle_cuenta(detalle_cuenta_id)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
 
