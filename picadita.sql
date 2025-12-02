@@ -536,6 +536,17 @@ INSERT INTO mesa (area_id, num_mesa) VALUES
 INSERT INTO menu (nombre, hora_inicio, hora_fin, fecha_creacion, activo) 
 VALUES ('Menú General', '07:00:00', '23:00:00', NOW(), TRUE);
 
+-- Vincular el menú a la sucursal
+INSERT INTO sucursal_menu (sucursal_id, menu_id) VALUES
+(1, 1);
+(2, 1);
+(3, 1);
+(4, 1);
+(5, 1);
+(6, 1);
+(7, 1);
+(8, 1);
+
 -- 2. CATEGORÍAS (Estructura completa de la carta)
 INSERT INTO categoria (menu_id, nombre) VALUES 
 
