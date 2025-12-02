@@ -20,7 +20,7 @@ CREATE TABLE sucursal(
 
 CREATE TABLE rol(
     rol_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     descripcion VARCHAR(60)
 );
 
@@ -29,8 +29,8 @@ CREATE TABLE empleado(
     empleado_id SERIAL PRIMARY KEY,
     sucursal_id INT NOT NULL,
     rol_id INT NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
-    apellido VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
     estado BOOLEAN NOT NULL DEFAULT TRUE,
     contraseña VARCHAR(255) NOT NULL,
 
@@ -50,7 +50,7 @@ CREATE TABLE empleado(
 CREATE TABLE areaventa(
     area_id SERIAL PRIMARY KEY,
     sucursal_id INT NOT NULL,
-    nombre VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     CONSTRAINT fk_sucursal_area
         FOREIGN KEY (sucursal_id)
         REFERENCES sucursal(sucursal_id)
@@ -215,7 +215,7 @@ CREATE TABLE producto_componente (
 
 CREATE TABLE modificador(
     modificador_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     precio NUMERIC(10,2) NOT NULL DEFAULT 0.00
 );
 
@@ -245,7 +245,7 @@ CREATE TABLE pago(
 CREATE TABLE descuento(
     descuento_id SERIAL PRIMARY KEY,
     nombre_convenio VARCHAR(120) NOT NULL,
-    tipo VARCHAR(50),
+    tipo VARCHAR(100),
     porcentaje NUMERIC(10,2),
     monto_fijo NUMERIC(10,2),
     empresa VARCHAR(120),
@@ -279,14 +279,14 @@ CREATE TABLE detalle_pago(
 
 CREATE TABLE promocion(
     promocion_id SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
     esta_activo BOOLEAN NOT NULL DEFAULT TRUE,
     valor_porcentaje NUMERIC(5,2),
     monto_minimo NUMERIC(10,2),
     fecha_hora_inicio TIMESTAMP,
     fecha_hora_fin TIMESTAMP,
     dias_aplicables VARCHAR(120), 
-    tipo_beneficio VARCHAR(50) NOT NULL
+    tipo_beneficio VARCHAR(100) NOT NULL
 );
 
 
@@ -302,8 +302,8 @@ CREATE TABLE dispositivo(
     dispositivo_id SERIAL PRIMARY KEY,
     area_impresion_id INT NOT NULL,
     fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
-    tipo VARCHAR(50),
-    estado VARCHAR(50),
+    tipo VARCHAR(100),
+    estado VARCHAR(100),
     modelo VARCHAR(60),
 
     CONSTRAINT fk_area_impresion 
@@ -400,7 +400,7 @@ CREATE TABLE sesion(
 CREATE TABLE area_cocina (
     area_cocina_id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    tipo_area VARCHAR(50),
+    tipo_area VARCHAR(100),
     estado VARCHAR(30) DEFAULT 'activo'
 );
 
@@ -408,7 +408,7 @@ CREATE TABLE historial_preparacion(
     historial_preparacion_id SERIAL PRIMARY KEY,
     detalle_id INT NOT NULL,
     area_cocina_id INT NOT NULL,
-    estado VARCHAR(50) NOT NULL,
+    estado VARCHAR(100) NOT NULL,
     fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_detalle
