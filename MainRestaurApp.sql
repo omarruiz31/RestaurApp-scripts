@@ -1,7 +1,6 @@
 CREATE TABLE restaurante(
     restaurante_id SERIAL PRIMARY KEY,
     nombre VARCHAR(120) NOT NULL,
-    telefono VARCHAR(12),
     RFC VARCHAR (120)
 );
 
@@ -11,6 +10,7 @@ CREATE TABLE sucursal(
     nombre VARCHAR(60) NOT NULL,
     direccion VARCHAR(120) NOT NULL,
     region VARCHAR(60),
+    telefono VARCHAR(100),
 
     CONSTRAINT fk_restaurant
     FOREIGN KEY(restaurante_id)
@@ -135,7 +135,7 @@ CREATE TABLE reserva(
 
 CREATE TABLE menu(
     menu_id SERIAL PRIMARY KEY,
-    sucursal_id INT NOT NULL,
+    sucursal_id INT ,
     nombre VARCHAR(100) NOT NULL,
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
@@ -146,6 +146,22 @@ CREATE TABLE menu(
         REFERENCES sucursal(sucursal_id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 
+);
+
+CREATE TABLE sucursal_menu(
+    sucursal_id INT,
+    menu_id INT,
+
+    CONSTRAINT pk_sucursal_menu
+        PRIMARY KEY (sucursal_id, menu_id),
+
+    CONSTRAINT fk_sucursal
+        FOREIGN KEY(sucursal_id)
+        REFERENCES sucursal(sucursal_id),
+    
+    CONSTRAINT fk_menu
+    FOREIGN KEY(menu_id)
+    REFERENCES menu(menu_id)
 );
 
 CREATE TABLE categoria(
@@ -194,7 +210,6 @@ CREATE TABLE producto_componente (
 
 );
 
-
 --Dispositivo debe estar registrado a cuenta ?? 
 
 
@@ -227,13 +242,14 @@ CREATE TABLE pago(
 );
 
 
-
 CREATE TABLE descuento(
     descuento_id SERIAL PRIMARY KEY,
     nombre_convenio VARCHAR(120) NOT NULL,
     tipo VARCHAR(50),
     porcentaje NUMERIC(10,2),
     monto_fijo NUMERIC(10,2),
+    empresa VARCHAR(120),
+    monedero_ahorro  NUMERIC(10,2),
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
@@ -269,7 +285,7 @@ CREATE TABLE promocion(
     monto_minimo NUMERIC(10,2),
     fecha_hora_inicio TIMESTAMP,
     fecha_hora_fin TIMESTAMP,
-    dias_aplicables VARCHAR(50), 
+    dias_aplicables VARCHAR(120), 
     tipo_beneficio VARCHAR(50) NOT NULL
 );
 
@@ -300,7 +316,6 @@ CREATE TABLE dispositivo(
 CREATE TABLE detalle_cuenta(
     detalle_id SERIAL PRIMARY KEY,
     comensal_id INT NOT NULL,
-    dispositivo_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad  NUMERIC(10,2),
     precio_unitario NUMERIC(10,2) NOT NULL,
@@ -315,12 +330,8 @@ CREATE TABLE detalle_cuenta(
         FOREIGN KEY(producto_id)
         REFERENCES producto(producto_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE RESTRICT
     
-    CONSTRAINT fk_detalle_dispositivo
-        FOREIGN KEY(dispositivo_id)
-        REFERENCES dispositivo(dispositivo_id)
-        ON UPDATE CASCADE
 );
 
 CREATE TABLE detalle_modificador(
