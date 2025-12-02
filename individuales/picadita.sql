@@ -145,10 +145,7 @@ INSERT INTO metodo_pago (nombre, es_efectivo, referencia)
 VALUES
 ('Efectivo', TRUE, 'Pago en moneda nacional'),
 ('Tarjeta de crédito', FALSE, 'Visa, Mastercard'),
-('Tarjeta de débito', FALSE, 'Visa, Mastercard'),
-('Transferencia bancaria', FALSE, 'SPEI'),
-('Pago con vales', FALSE, 'Vales de despensa / restaurante'),
-('Pago mixto', FALSE, 'Combina efectivo y tarjeta');
+('Tarjeta de débito', FALSE, 'Visa, Mastercard');
 
 
 
