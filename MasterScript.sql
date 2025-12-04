@@ -33,6 +33,8 @@ CREATE TABLE empleado(
     apellido VARCHAR(100) NOT NULL,
     estado BOOLEAN NOT NULL DEFAULT TRUE,
     contraseña VARCHAR(255) NOT NULL,
+    numero_autorizacion VARCHAR(100) DEFAULT NULL, -- campo nuevo 
+    
 
     CONSTRAINT fk_rol
         FOREIGN KEY(rol_id)
@@ -74,26 +76,28 @@ CREATE TABLE mesa(
         FOREIGN KEY (area_id)
         REFERENCES areaventa(area_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT uq_mesa_por_area --restriccion nueva 
+    UNIQUE (area_id, num_mesa)
 );
 
-CREATE TABLE cuenta (
-    cuenta_id SERIAL PRIMARY KEY,
+CREATE TABLE orden (
+    orden_id SERIAL PRIMARY KEY,
     fecha_hora_inicio TIMESTAMP NOT NULL DEFAULT NOW(),
     fecha_hora_cierre TIMESTAMP,
     estado BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE cuentaMesa(
-    cuenta_id INT NOT NULL,
+CREATE TABLE ordenMesa(
+    orden_id INT NOT NULL,
     mesa_id INT NOT NULL,
 
-    CONSTRAINT pk_cuenta_mesa
-        PRIMARY KEY (cuenta_id, mesa_id),
+    CONSTRAINT pk_orden_mesa
+        PRIMARY KEY (orden_id, mesa_id),
 
-    CONSTRAINT fk_cm_cuenta
-        FOREIGN KEY (cuenta_id)
-        REFERENCES cuenta(cuenta_id)
+    CONSTRAINT fk_cm_orden
+        FOREIGN KEY (orden_id)
+        REFERENCES orden(orden_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
     
@@ -106,12 +110,12 @@ CREATE TABLE cuentaMesa(
 
 CREATE TABLE comensal(
     comensal_id SERIAL PRIMARY KEY,
-    cuenta_id INT NOT NULL,
+    orden_id INT NOT NULL,
     nombre_etiqueta VARCHAR(40),
 
-    CONSTRAINT fk_cuenta_comensal
-        FOREIGN KEY(cuenta_id)
-        REFERENCES cuenta(cuenta_id)
+    CONSTRAINT fk_orden_comensal
+        FOREIGN KEY(orden_id)
+        REFERENCES orden(orden_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
@@ -210,8 +214,6 @@ CREATE TABLE producto_componente (
 
 );
 
---Dispositivo debe estar registrado a cuenta ?? 
-
 
 CREATE TABLE modificador(
     modificador_id SERIAL PRIMARY KEY,
@@ -250,19 +252,20 @@ CREATE TABLE descuento(
     monto_fijo NUMERIC(10,2),
     empresa VARCHAR(120),
     monedero_ahorro  NUMERIC(10,2),
-    activo BOOLEAN NOT NULL DEFAULT TRUE
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    necesita_autorizacion BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE detalle_pago(
     detalle_pago_id SERIAL PRIMARY KEY,
-    cuenta_id INT ,
+    orden_id INT ,
     comensal_id INT,
     pago_id INT,
     descuento_id INT,
 
-    CONSTRAINT fk_cuenta
-    FOREIGN KEY(cuenta_id)
-    REFERENCES cuenta(cuenta_id),
+    CONSTRAINT fk_orden
+    FOREIGN KEY(orden_id)
+    REFERENCES orden(orden_id),
 
     CONSTRAINT fk_comensal
     FOREIGN KEY(comensal_id)
@@ -313,8 +316,8 @@ CREATE TABLE dispositivo(
     ON DELETE RESTRICT
 );
 
-CREATE TABLE detalle_cuenta(
-    detalle_cuenta_id SERIAL PRIMARY KEY,
+CREATE TABLE detalle_orden(
+    detalle_orden_id SERIAL PRIMARY KEY,
     comensal_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad  NUMERIC(10,2),
@@ -336,14 +339,14 @@ CREATE TABLE detalle_cuenta(
 
 CREATE TABLE detalle_modificador(
     detalle_modificador SERIAL  PRIMARY KEY,
-    detalle_cuenta_id INT NOT NULL,
+    detalle_orden_id INT NOT NULL,
     modificador_id INT,
     cantidad NUMERIC(10,2) NOT NULL DEFAULT 1,
     precio_unitario NUMERIC(10,2) NOT NULL,
 
     CONSTRAINT fk_dm_detalle
-        FOREIGN KEY(detalle_cuenta_id)
-        REFERENCES detalle_cuenta(detalle_cuenta_id)
+        FOREIGN KEY(detalle_orden_id)
+        REFERENCES detalle_orden(detalle_orden_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
@@ -356,15 +359,15 @@ CREATE TABLE detalle_modificador(
 
 CREATE TABLE detalle_promocion(
 
-    detalle_cuenta_id INT NOT NULL,
+    detalle_orden_id INT NOT NULL,
     promocion_id INT NOT NULL,
 
     CONSTRAINT pk_detalle_promocion
-    PRIMARY KEY(detalle_cuenta_id,promocion_id),
+    PRIMARY KEY(detalle_orden_id,promocion_id),
 
     CONSTRAINT fk_detalle
-    FOREIGN KEY (detalle_cuenta_id)
-    REFERENCES detalle_cuenta(detalle_cuenta_id),
+    FOREIGN KEY (detalle_orden_id)
+    REFERENCES detalle_orden(detalle_orden_id),
 
     CONSTRAINT fk_promocion
     FOREIGN KEY(promocion_id)
@@ -406,14 +409,14 @@ CREATE TABLE area_cocina (
 
 CREATE TABLE historial_preparacion(
     historial_preparacion_id SERIAL PRIMARY KEY,
-    detalle_cuenta_id INT NOT NULL,
+    detalle_orden_id INT NOT NULL,
     area_cocina_id INT NOT NULL,
     estado VARCHAR(100) NOT NULL,
     fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_detalle
-    FOREIGN KEY(detalle_cuenta_id)
-    REFERENCES detalle_cuenta(detalle_cuenta_id)
+    FOREIGN KEY(detalle_orden_id)
+    REFERENCES detalle_orden(detalle_orden_id)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
 
@@ -470,81 +473,81 @@ INSERT INTO rol (nombre, descripcion)
   ('Ayudante de cocina', 'Apoyo en cocina'),
   ('Cajero', 'Cobro y facturación');
 
-  INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, estado, contraseña)
+  INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, estado, contraseña, numero_autorizacion)
 VALUES
     -- Sucursal 1: Soriana Cuauhtémoc (Mina)
-    (1, 7, 'María',   'Gómez',      TRUE, 'pass123'),  -- Gerente de sucursal
-    (1, 2, 'Luis',    'Cruz',       TRUE, 'pass123'),  -- Mesero
-    (1, 2, 'Ana',     'Martínez',   TRUE, 'pass123'),  -- Mesera
-    (1, 2, 'Carlos',  'Ramírez',    TRUE, 'pass123'),  -- Mesero
-    (1, 8, 'Pedro',   'López',      TRUE, 'pass123'),  -- Cocinero
-    (1, 9, 'Daniel',  'Hernández',  TRUE, 'pass123'),  -- Ayudante de cocina
-    (1,10, 'Carla',   'Reyes',      TRUE, 'pass123'),  -- Cajera
-    (1, 1, 'Jorge',   'Pérez',      TRUE, 'pass123'),  -- Auxiliar administrativo
-    (1, 5, 'Laura',   'Hernández',  TRUE, 'pass123'),  -- Auxiliar de RRHH
-    (1, 6, 'Miguel',  'Vargas',     TRUE, 'pass123'),  -- Auxiliar de mantenimiento
-    (1, 4, 'Sofía',   'Rangel',     TRUE, 'pass123'),  -- Auditor
+    (1, 7, 'María',   'Gómez',      TRUE, 'pass123', 'AUTH-S1-001'),  -- Gerente de sucursal
+    (1, 2, 'Luis',    'Cruz',       TRUE, 'pass123', NULL),           -- Mesero
+    (1, 2, 'Ana',     'Martínez',   TRUE, 'pass123', NULL),           -- Mesera
+    (1, 2, 'Carlos',  'Ramírez',    TRUE, 'pass123', NULL),           -- Mesero
+    (1, 8, 'Pedro',   'López',      TRUE, 'pass123', NULL),           -- Cocinero
+    (1, 9, 'Daniel',  'Hernández',  TRUE, 'pass123', NULL),           -- Ayudante de cocina
+    (1,10, 'Carla',   'Reyes',      TRUE, 'pass123', NULL),           -- Cajera
+    (1, 1, 'Jorge',   'Pérez',      TRUE, 'pass123', NULL),           -- Auxiliar administrativo
+    (1, 5, 'Laura',   'Hernández',  TRUE, 'pass123', NULL),           -- Auxiliar de RRHH
+    (1, 6, 'Miguel',  'Vargas',     TRUE, 'pass123', NULL),           -- Auxiliar de mantenimiento
+    (1, 4, 'Sofía',   'Rangel',     TRUE, 'pass123', NULL),           -- Auditor
 
     -- Sucursal 2: Centro Mina
-    (2, 7, 'Ricardo', 'Navarro',    TRUE, 'pass123'),  -- Gerente
-    (2, 2, 'Elena',   'Castillo',   TRUE, 'pass123'),  -- Mesera
-    (2, 2, 'Diego',   'Santos',     TRUE, 'pass123'),  -- Mesero
-    (2, 8, 'Hugo',    'Mendoza',    TRUE, 'pass123'),  -- Cocinero
-    (2, 9, 'Brenda',  'Ortiz',      TRUE, 'pass123'),  -- Ayudante
-    (2,10, 'Nadia',   'Flores',     TRUE, 'pass123'),  -- Cajera
-    (2, 6, 'Óscar',   'Luna',       TRUE, 'pass123'),  -- Mantenimiento
+    (2, 7, 'Ricardo', 'Navarro',    TRUE, 'pass123', 'AUTH-S2-001'),  -- Gerente
+    (2, 2, 'Elena',   'Castillo',   TRUE, 'pass123', NULL),           -- Mesera
+    (2, 2, 'Diego',   'Santos',     TRUE, 'pass123', NULL),           -- Mesero
+    (2, 8, 'Hugo',    'Mendoza',    TRUE, 'pass123', NULL),           -- Cocinero
+    (2, 9, 'Brenda',  'Ortiz',      TRUE, 'pass123', NULL),           -- Ayudante
+    (2,10, 'Nadia',   'Flores',     TRUE, 'pass123', NULL),           -- Cajera
+    (2, 6, 'Óscar',   'Luna',       TRUE, 'pass123', NULL),           -- Mantenimiento
 
     -- Sucursal 3: Instituto Tecnológico (Mina)
-    (3, 7, 'Patricia','Rivera',     TRUE, 'pass123'),  -- Gerente
-    (3, 2, 'Iván',    'Torres',     TRUE, 'pass123'),  -- Mesero
-    (3, 2, 'Fabiola', 'Juárez',     TRUE, 'pass123'),  -- Mesera
-    (3, 8, 'Marco',   'Aguilar',    TRUE, 'pass123'),  -- Cocinero
-    (3, 9, 'Cintia',  'Salas',      TRUE, 'pass123'),  -- Ayudante
-    (3,10, 'Raúl',    'Pacheco',    TRUE, 'pass123'),  -- Cajero
+    (3, 7, 'Patricia','Rivera',     TRUE, 'pass123', 'AUTH-S3-001'),  -- Gerente
+    (3, 2, 'Iván',    'Torres',     TRUE, 'pass123', NULL),           -- Mesero
+    (3, 2, 'Fabiola', 'Juárez',     TRUE, 'pass123', NULL),           -- Mesera
+    (3, 8, 'Marco',   'Aguilar',    TRUE, 'pass123', NULL),           -- Cocinero
+    (3, 9, 'Cintia',  'Salas',      TRUE, 'pass123', NULL),           -- Ayudante
+    (3,10, 'Raúl',    'Pacheco',    TRUE, 'pass123', NULL),           -- Cajero
 
     -- Sucursal 4: Centro (Coatza) - sucursal central
-    (4, 7, 'Alejandro','Domínguez', TRUE, 'pass123'),  -- Gerente
-    (4, 2, 'Karla',   'Mora',       TRUE, 'pass123'),  -- Mesera
-    (4, 2, 'Sergio',  'Ibarra',     TRUE, 'pass123'),  -- Mesero
-    (4, 2, 'Yazmín',  'Salazar',    TRUE, 'pass123'),  -- Mesera
-    (4, 8, 'Noé',     'Cortés',     TRUE, 'pass123'),  -- Cocinero
-    (4, 9, 'Liliana', 'Rosales',    TRUE, 'pass123'),  -- Ayudante
-    (4,10, 'Eric',    'Velázquez',  TRUE, 'pass123'),  -- Cajero
-    (4, 1, 'Claudia', 'Mejía',      TRUE, 'pass123'),  -- Auxiliar administrativo
-    (4, 5, 'Adriana', 'Pineda',     TRUE, 'pass123'),  -- Auxiliar RRHH
-    (4, 6, 'Tomás',   'Galindo',    TRUE, 'pass123'),  -- Mantenimiento
+    (4, 7, 'Alejandro','Domínguez', TRUE, 'pass123', 'AUTH-S4-001'),  -- Gerente
+    (4, 2, 'Karla',   'Mora',       TRUE, 'pass123', NULL),           -- Mesera
+    (4, 2, 'Sergio',  'Ibarra',     TRUE, 'pass123', NULL),           -- Mesero
+    (4, 2, 'Yazmín',  'Salazar',    TRUE, 'pass123', NULL),           -- Mesera
+    (4, 8, 'Noé',     'Cortés',     TRUE, 'pass123', NULL),           -- Cocinero
+    (4, 9, 'Liliana', 'Rosales',    TRUE, 'pass123', NULL),           -- Ayudante
+    (4,10, 'Eric',    'Velázquez',  TRUE, 'pass123', NULL),           -- Cajero
+    (4, 1, 'Claudia', 'Mejía',      TRUE, 'pass123', NULL),           -- Auxiliar administrativo
+    (4, 5, 'Adriana', 'Pineda',     TRUE, 'pass123', NULL),           -- Auxiliar RRHH
+    (4, 6, 'Tomás',   'Galindo',    TRUE, 'pass123', NULL),           -- Mantenimiento
 
     -- Sucursal 5: Soriana Palmar
-    (5, 7, 'Fernando','Zamora',     TRUE, 'pass123'),  -- Gerente
-    (5, 2, 'Rocío',   'Campos',     TRUE, 'pass123'),  -- Mesera
-    (5, 2, 'Julio',   'Peña',       TRUE, 'pass123'),  -- Mesero
-    (5, 8, 'Gabriel', 'Solís',      TRUE, 'pass123'),  -- Cocinero
-    (5, 9, 'Paola',   'Delgado',    TRUE, 'pass123'),  -- Ayudante
-    (5,10, 'Inés',    'Bernal',     TRUE, 'pass123'),  -- Cajera
+    (5, 7, 'Fernando','Zamora',     TRUE, 'pass123', 'AUTH-S5-001'),  -- Gerente
+    (5, 2, 'Rocío',   'Campos',     TRUE, 'pass123', NULL),           -- Mesera
+    (5, 2, 'Julio',   'Peña',       TRUE, 'pass123', NULL),           -- Mesero
+    (5, 8, 'Gabriel', 'Solís',      TRUE, 'pass123', NULL),           -- Cocinero
+    (5, 9, 'Paola',   'Delgado',    TRUE, 'pass123', NULL),           -- Ayudante
+    (5,10, 'Inés',    'Bernal',     TRUE, 'pass123', NULL),           -- Cajera
 
     -- Sucursal 6: Soriana Mercado
-    (6, 7, 'Héctor',  'Castañeda',  TRUE, 'pass123'),  -- Gerente
-    (6, 2, 'Nancy',   'Quiroz',     TRUE, 'pass123'),  -- Mesera
-    (6, 2, 'Omar',    'Lagos',      TRUE, 'pass123'),  -- Mesero
-    (6, 8, 'Ulises',  'Carrillo',   TRUE, 'pass123'),  -- Cocinero
-    (6, 9, 'Rebeca',  'Fierro',     TRUE, 'pass123'),  -- Ayudante
-    (6,10, 'Diana',   'Acosta',     TRUE, 'pass123'),  -- Cajera
+    (6, 7, 'Héctor',  'Castañeda',  TRUE, 'pass123', 'AUTH-S6-001'),  -- Gerente
+    (6, 2, 'Nancy',   'Quiroz',     TRUE, 'pass123', NULL),           -- Mesera
+    (6, 2, 'Omar',    'Lagos',      TRUE, 'pass123', NULL),           -- Mesero
+    (6, 8, 'Ulises',  'Carrillo',   TRUE, 'pass123', NULL),           -- Cocinero
+    (6, 9, 'Rebeca',  'Fierro',     TRUE, 'pass123', NULL),           -- Ayudante
+    (6,10, 'Diana',   'Acosta',     TRUE, 'pass123', NULL),           -- Cajera
 
     -- Sucursal 7: Malecón
-    (7, 7, 'Ramón',   'Arriaga',    TRUE, 'pass123'),  -- Gerente
-    (7, 2, 'Mónica',  'García',     TRUE, 'pass123'),  -- Mesera
-    (7, 2, 'Javier',  'Franco',     TRUE, 'pass123'),  -- Mesero
-    (7, 8, 'Israel',  'Nieto',      TRUE, 'pass123'),  -- Cocinero
-    (7, 9, 'Paty',    'Corona',     TRUE, 'pass123'),  -- Ayudante
-    (7,10, 'Bruno',   'Silva',      TRUE, 'pass123'),  -- Cajero
+    (7, 7, 'Ramón',   'Arriaga',    TRUE, 'pass123', 'AUTH-S7-001'),  -- Gerente
+    (7, 2, 'Mónica',  'García',     TRUE, 'pass123', NULL),           -- Mesera
+    (7, 2, 'Javier',  'Franco',     TRUE, 'pass123', NULL),           -- Mesero
+    (7, 8, 'Israel',  'Nieto',      TRUE, 'pass123', NULL),           -- Cocinero
+    (7, 9, 'Paty',    'Corona',     TRUE, 'pass123', NULL),           -- Ayudante
+    (7,10, 'Bruno',   'Silva',      TRUE, 'pass123', NULL),           -- Cajero
 
     -- Sucursal 8: Gaviotas
-    (8, 7, 'Esteban', 'Méndez',     TRUE, 'pass123'),  -- Gerente
-    (8, 2, 'Luz',     'Arellano',   TRUE, 'pass123'),  -- Mesera
-    (8, 2, 'Carlos',  'Mora',       TRUE, 'pass123'),  -- Mesero
-    (8, 8, 'Iván',    'Cano',       TRUE, 'pass123'),  -- Cocinero
-    (8, 9, 'Marisol', 'León',       TRUE, 'pass123'),  -- Ayudante
-    (8,10, 'Pablo',   'Esquivel',   TRUE, 'pass123');  -- Cajero
+    (8, 7, 'Esteban', 'Méndez',     TRUE, 'pass123', 'AUTH-S8-001'),  -- Gerente
+    (8, 2, 'Luz',     'Arellano',   TRUE, 'pass123', NULL),           -- Mesera
+    (8, 2, 'Carlos',  'Mora',       TRUE, 'pass123', NULL),           -- Mesero
+    (8, 8, 'Iván',    'Cano',       TRUE, 'pass123', NULL),           -- Cocinero
+    (8, 9, 'Marisol', 'León',       TRUE, 'pass123', NULL),           -- Ayudante
+    (8,10, 'Pablo',   'Esquivel',   TRUE, 'pass123', NULL);           -- Cajero
 
 
 INSERT INTO area_impresion (nombre, ip, tipo_impresora, estado)
@@ -1296,144 +1299,142 @@ INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paq
 
 -- CAT 28: RES (Se insertan en 0.00 para actualizar)
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(28, 'Bisteces a la Mexicana con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(28, 'Fajitas de res a la mostaza con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(28, 'Medallones de Cuete a la Barbecue con papas', 0.00, 'Plato fuerte', FALSE),
-(28, 'Rollito de Carne relleno de verduras con arroz', 0.00, 'Plato fuerte', FALSE),
-(28, 'Tortitas de Carne de res deshebrada en chipotle', 0.00, 'Plato fuerte', FALSE),
-(28, 'Fajitas de Res adobadas con papas y frijoles', 0.00, 'Plato fuerte', FALSE),
-(28, 'Cuete Mechado de verduras con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(28, 'Ropa Vieja de Res con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(28, 'Barbacoa de Res con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(28, 'Medallones de Cuete a la mostaza con arroz', 0.00, 'Plato fuerte', FALSE),
-(28, 'Albondigas Enchipotladas con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(28, 'Medallones de Cuete en salsa de toronja', 0.00, 'Plato fuerte', FALSE),
-(28, 'Bisteces de Res a la Poblana con frijol', 0.00, 'Plato fuerte', FALSE),
-(28, 'Carne deshebrada a la Mexicana con frijol', 0.00, 'Plato fuerte', FALSE),
-(28, 'Bisteces de res al albañil con frijoles', 0.00, 'Plato fuerte', FALSE),
-(28, 'Birria de Res con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(28, 'Carne Polaca de res con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(28, 'Pastel de Carne con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(28, 'Bisteces Rancheros con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(28, 'Brochetas de Res con ensalada', 0.00, 'Plato fuerte', FALSE),
-(28, 'Bisteces Arrieros de Res con frijoles', 0.00, 'Plato fuerte', FALSE),
-(28, 'Caldo de Mondongo (Platillo)', 0.00, 'Plato fuerte', FALSE),
-(28, 'Fajitas Lázaro de Bisteces con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(28, 'Medallones de Cuete en salsa chipotle', 0.00, 'Plato fuerte', FALSE),
-(28, 'Bisteces Encebollados de Res con frijoles', 0.00, 'Plato fuerte', FALSE),
-(28, 'Medallones de Cuete en Salsa de champiñones', 0.00, 'Plato fuerte', FALSE),
-(28, 'Milanesa de Res con ensalada y frijoles', 0.00, 'Plato fuerte', FALSE);
+(28, 'Bisteces a la Mexicana con frijoles refritos', 194.26, 'Plato fuerte', FALSE),
+(28, 'Fajitas de res a la mostaza con arroz blanco', 138.11, 'Plato fuerte', FALSE),
+(28, 'Medallones de Cuete a la Barbecue con papas', 123.48, 'Plato fuerte', FALSE),
+(28, 'Rollito de Carne relleno de verduras con arroz', 212.46, 'Plato fuerte', FALSE),
+(28, 'Tortitas de Carne de res deshebrada en chipotle', 143.21, 'Plato fuerte', FALSE),
+(28, 'Fajitas de Res adobadas con papas y frijoles', 137.72, 'Plato fuerte', FALSE),
+(28, 'Cuete Mechado de verduras con arroz blanco', 212.59, 'Plato fuerte', FALSE),
+(28, 'Ropa Vieja de Res con frijoles refritos', 173.46, 'Plato fuerte', FALSE),
+(28, 'Barbacoa de Res con frijoles refritos', 186.28, 'Plato fuerte', FALSE),
+(28, 'Medallones de Cuete a la mostaza con arroz', 143.65, 'Plato fuerte', FALSE),
+(28, 'Albondigas Enchipotladas con arroz blanco', 179.44, 'Plato fuerte', FALSE),
+(28, 'Medallones de Cuete en salsa de toronja', 188.38, 'Plato fuerte', FALSE),
+(28, 'Bisteces de Res a la Poblana con frijol', 186.91, 'Plato fuerte', FALSE),
+(28, 'Carne deshebrada a la Mexicana con frijol', 217.89, 'Plato fuerte', FALSE),
+(28, 'Bisteces de res al albañil con frijoles', 197.20, 'Plato fuerte', FALSE),
+(28, 'Birria de Res con frijoles refritos', 135.25, 'Plato fuerte', FALSE),
+(28, 'Carne Polaca de res con frijoles refritos', 124.36, 'Plato fuerte', FALSE),
+(28, 'Pastel de Carne con arroz blanco', 125.39, 'Plato fuerte', FALSE),
+(28, 'Bisteces Rancheros con frijoles refritos', 177.56, 'Plato fuerte', FALSE),
+(28, 'Brochetas de Res con ensalada', 158.54, 'Plato fuerte', FALSE),
+(28, 'Bisteces Arrieros de Res con frijoles', 167.57, 'Plato fuerte', FALSE),
+(28, 'Caldo de Mondongo (Platillo)', 209.87, 'Plato fuerte', FALSE),
+(28, 'Fajitas Lázaro de Bisteces con arroz blanco', 172.55, 'Plato fuerte', FALSE),
+(28, 'Medallones de Cuete en salsa chipotle', 193.14, 'Plato fuerte', FALSE),
+(28, 'Bisteces Encebollados de Res con frijoles', 219.01, 'Plato fuerte', FALSE),
+(28, 'Medallones de Cuete en Salsa de champiñones', 203.65, 'Plato fuerte', FALSE),
+(28, 'Milanesa de Res con ensalada y frijoles', 146.25, 'Plato fuerte', FALSE);
 
 -- CAT 29: CERDO
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(29, 'Cerdo Enchilado con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Costillas de Cerdo adobadas con arroz', 0.00, 'Plato fuerte', FALSE),
-(29, 'Bisteces Encebollados de Cerdo con ensalada', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo en Salsa de Cacahuate con frijoles', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cochinita Pibil con papas y arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Milanesa de Cerdo con ensalada', 0.00, 'Plato fuerte', FALSE),
-(29, 'Costillas de Cerdo de Salsa Verde con arroz', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo a la Coca Cola con papas de arroz', 0.00, 'Plato fuerte', FALSE),
-(29, 'Costillas de Cerdo en salsa agridulce', 0.00, 'Plato fuerte', FALSE),
-(29, 'Puerco en Salsa de Perejil con papas', 0.00, 'Plato fuerte', FALSE),
-(29, 'Mole de Cerdo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo al Pipián con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo en Salsa Pasilla con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Carne de Cerdo en salsa de ciruela pasa', 0.00, 'Plato fuerte', FALSE),
-(29, 'Carne de Cerdo Adobada con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Chuletas de Cerdo a la barbecue con ensalada', 0.00, 'Plato fuerte', FALSE),
-(29, 'Carne de Cerdo en salsa verde con arroz', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo en Salsa agridulce con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo a la Naranja con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo a la Mestiza con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo a la Cerveza con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo a la Barbecue con papas y arroz', 0.00, 'Plato fuerte', FALSE),
-(29, 'Costillas de Cerdo enchipotladas con papas', 0.00, 'Plato fuerte', FALSE),
-(29, 'Chuletas de Cerdo a la Plancha con ensalada', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo con calabacitas y granos de elote', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo en Salsa de Tamarindo con arroz', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo a la Hawaiana con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(29, 'Cerdo con Verdolagas con frijoles refritos', 0.00, 'Plato fuerte', FALSE);
+(29, 'Cerdo Enchilado con arroz blanco', 169.49, 'Plato fuerte', FALSE),
+(29, 'Costillas de Cerdo adobadas con arroz', 213.78, 'Plato fuerte', FALSE),
+(29, 'Bisteces Encebollados de Cerdo con ensalada', 139.77, 'Plato fuerte', FALSE),
+(29, 'Cerdo en Salsa de Cacahuate con frijoles', 185.28, 'Plato fuerte', FALSE),
+(29, 'Cochinita Pibil con papas y arroz blanco', 205.30, 'Plato fuerte', FALSE),
+(29, 'Milanesa de Cerdo con ensalada', 198.81, 'Plato fuerte', FALSE),
+(29, 'Costillas de Cerdo de Salsa Verde con arroz', 122.89, 'Plato fuerte', FALSE),
+(29, 'Cerdo a la Coca Cola con papas de arroz', 163.55, 'Plato fuerte', FALSE),
+(29, 'Costillas de Cerdo en salsa agridulce', 153.69, 'Plato fuerte', FALSE),
+(29, 'Puerco en Salsa de Perejil con papas', 217.06, 'Plato fuerte', FALSE),
+(29, 'Mole de Cerdo con arroz blanco', 127.84, 'Plato fuerte', FALSE),
+(29, 'Cerdo al Pipián con arroz blanco', 207.80, 'Plato fuerte', FALSE),
+(29, 'Cerdo en Salsa Pasilla con arroz blanco', 175.08, 'Plato fuerte', FALSE),
+(29, 'Carne de Cerdo en salsa de ciruela pasa', 157.48, 'Plato fuerte', FALSE),
+(29, 'Carne de Cerdo Adobada con arroz blanco', 192.41, 'Plato fuerte', FALSE),
+(29, 'Chuletas de Cerdo a la barbecue con ensalada', 182.60, 'Plato fuerte', FALSE),
+(29, 'Carne de Cerdo en salsa verde con arroz', 143.07, 'Plato fuerte', FALSE),
+(29, 'Cerdo en Salsa agridulce con arroz blanco', 174.64, 'Plato fuerte', FALSE),
+(29, 'Cerdo a la Naranja con arroz blanco', 122.33, 'Plato fuerte', FALSE),
+(29, 'Cerdo a la Mestiza con arroz blanco', 170.43, 'Plato fuerte', FALSE),
+(29, 'Cerdo a la Cerveza con arroz blanco', 167.58, 'Plato fuerte', FALSE),
+(29, 'Cerdo a la Barbecue con papas y arroz', 208.60, 'Plato fuerte', FALSE),
+(29, 'Costillas de Cerdo enchipotladas con papas', 178.81, 'Plato fuerte', FALSE),
+(29, 'Chuletas de Cerdo a la Plancha con ensalada', 179.83, 'Plato fuerte', FALSE),
+(29, 'Cerdo con calabacitas y granos de elote', 171.07, 'Plato fuerte', FALSE),
+(29, 'Cerdo en Salsa de Tamarindo con arroz', 135.97, 'Plato fuerte', FALSE),
+(29, 'Cerdo a la Hawaiana con arroz blanco', 219.57, 'Plato fuerte', FALSE),
+(29, 'Cerdo con Verdolagas con frijoles refritos', 210.01, 'Plato fuerte', FALSE);
 
 
--- CAT 30: AVES
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(30, 'Pollos a la Naranja con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo a la barbecue con papitas y arroz', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo a la crema de Queso con arroz', 0.00, 'Plato fuerte', FALSE),
-(30, 'Filete de Pollo a la Mantequilla con ensalada', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo a la Hawaiana con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pechugas rellenas de Jamón y Queso', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo en Pipián con arroz blanco y frijoles', 0.00, 'Plato fuerte', FALSE),
-(30, 'Mole de Pollo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Milanesa de Pollo con Ensalada', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Kentucky con ensalada', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Adobado con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Barbacoa de Pollo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Filete de Pollo al Orégano con arroz', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo en Salsa de Limón con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Filete de Pollo en Salsa de chile morita', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Entomatado con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Campirano con papas y arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo con Champiñones con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Frito con ensalada', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo en Escabeche con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo en Salsa de Perejil con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Pibil con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pechugas a la Cordón Blue con ensalada', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo en Mole Verde con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Supremo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Filete de Pollo en Salsa de aguacate', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo a la Vizcaina con frijoles refritos', 0.00, 'Plato fuerte', FALSE),
-(30, 'Estofado de Pollo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo bañado en Salsa Verde con arroz', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo Enchipotlado con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Filete de Pollo a la barbecue con ensalada', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pollo a la Jardinera con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(30, 'Pechugas adobadas con papas y arroz', 0.00, 'Plato fuerte', FALSE),
-(30, 'Tortitas de Pollo Deshebrado en salsa verde', 0.00, 'Plato fuerte', FALSE);
+(30, 'Pollos a la Naranja con arroz blanco', 214.17, 'Plato fuerte', FALSE),
+(30, 'Pollo a la barbecue con papitas y arroz', 209.47, 'Plato fuerte', FALSE),
+(30, 'Pollo a la crema de Queso con arroz', 135.81, 'Plato fuerte', FALSE),
+(30, 'Filete de Pollo a la Mantequilla con ensalada', 176.17, 'Plato fuerte', FALSE),
+(30, 'Pollo a la Hawaiana con arroz blanco', 130.67, 'Plato fuerte', FALSE),
+(30, 'Pechugas rellenas de Jamón y Queso', 120.78, 'Plato fuerte', FALSE),
+(30, 'Pollo en Pipián con arroz blanco y frijoles', 151.37, 'Plato fuerte', FALSE),
+(30, 'Mole de Pollo con arroz blanco', 169.05, 'Plato fuerte', FALSE),
+(30, 'Milanesa de Pollo con Ensalada', 125.37, 'Plato fuerte', FALSE),
+(30, 'Pollo Kentucky con ensalada', 171.91, 'Plato fuerte', FALSE),
+(30, 'Pollo Adobado con arroz blanco', 142.48, 'Plato fuerte', FALSE),
+(30, 'Barbacoa de Pollo con arroz blanco', 216.33, 'Plato fuerte', FALSE),
+(30, 'Filete de Pollo al Orégano con arroz', 141.79, 'Plato fuerte', FALSE),
+(30, 'Pollo en Salsa de Limón con arroz blanco', 142.69, 'Plato fuerte', FALSE),
+(30, 'Filete de Pollo en Salsa de chile morita', 137.21, 'Plato fuerte', FALSE),
+(30, 'Pollo Entomatado con arroz blanco', 131.20, 'Plato fuerte', FALSE),
+(30, 'Pollo Campirano con papas y arroz blanco', 164.17, 'Plato fuerte', FALSE),
+(30, 'Pollo con Champiñones con arroz blanco', 172.86, 'Plato fuerte', FALSE),
+(30, 'Pollo Frito con ensalada', 190.78, 'Plato fuerte', FALSE),
+(30, 'Pollo en Escabeche con arroz blanco', 148.49, 'Plato fuerte', FALSE),
+(30, 'Pollo en Salsa de Perejil con arroz blanco', 128.09, 'Plato fuerte', FALSE),
+(30, 'Pollo Pibil con arroz blanco', 179.13, 'Plato fuerte', FALSE),
+(30, 'Pechugas a la Cordón Blue con ensalada', 133.45, 'Plato fuerte', FALSE),
+(30, 'Pollo en Mole Verde con arroz blanco', 217.16, 'Plato fuerte', FALSE),
+(30, 'Pollo Supremo con arroz blanco', 199.92, 'Plato fuerte', FALSE),
+(30, 'Filete de Pollo en Salsa de aguacate', 165.94, 'Plato fuerte', FALSE),
+(30, 'Pollo a la Vizcaina con frijoles refritos', 176.14, 'Plato fuerte', FALSE),
+(30, 'Estofado de Pollo con arroz blanco', 135.16, 'Plato fuerte', FALSE),
+(30, 'Pollo bañado en Salsa Verde con arroz', 204.21, 'Plato fuerte', FALSE),
+(30, 'Pollo Enchipotlado con arroz blanco', 206.41, 'Plato fuerte', FALSE),
+(30, 'Filete de Pollo a la barbecue con ensalada', 153.73, 'Plato fuerte', FALSE),
+(30, 'Pollo a la Jardinera con arroz blanco', 157.30, 'Plato fuerte', FALSE),
+(30, 'Pechugas adobadas con papas y arroz', 138.94, 'Plato fuerte', FALSE),
+(30, 'Tortitas de Pollo Deshebrado en salsa verde', 158.13, 'Plato fuerte', FALSE);
 
 -- CAT 31: MARISCOS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(31, 'Filete de Pescado a la Mantequilla', 0.00, 'Plato fuerte', FALSE),
-(31, 'Filete de Pescado a la Pimienta con ensalada', 0.00, 'Plato fuerte', FALSE),
-(31, 'Filete de Pescado empanizado con ensalada', 0.00, 'Plato fuerte', FALSE),
-(31, 'Filete de Pescado a la Veracruzana', 0.00, 'Plato fuerte', FALSE),
-(31, 'Filete de Pescado al mojo de ajo', 0.00, 'Plato fuerte', FALSE),
-(31, 'Filete de Pescado a la Poblana con arroz', 0.00, 'Plato fuerte', FALSE),
-(31, 'Filete de Pescado en salsa de Perejil', 0.00, 'Plato fuerte', FALSE),
-(31, 'Pulpos al Ajillo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(31, 'Pulpos a la Veracruzana con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(31, 'Pulpos Enchipotlados con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(31, 'Pulpos al Mojo de Ajo con arroz blanco', 0.00, 'Plato fuerte', FALSE),
-(31, 'Pulpo a la Diabla con arroz blanco', 0.00, 'Plato fuerte', FALSE);
+(31, 'Filete de Pescado a la Mantequilla', 190.88, 'Plato fuerte', FALSE),
+(31, 'Filete de Pescado a la Pimienta con ensalada', 195.31, 'Plato fuerte', FALSE),
+(31, 'Filete de Pescado empanizado con ensalada', 183.61, 'Plato fuerte', FALSE),
+(31, 'Filete de Pescado a la Veracruzana', 210.77, 'Plato fuerte', FALSE),
+(31, 'Filete de Pescado al mojo de ajo', 138.72, 'Plato fuerte', FALSE),
+(31, 'Filete de Pescado a la Poblana con arroz', 197.04, 'Plato fuerte', FALSE),
+(31, 'Filete de Pescado en salsa de Perejil', 208.08, 'Plato fuerte', FALSE),
+(31, 'Pulpos al Ajillo con arroz blanco', 143.38, 'Plato fuerte', FALSE),
+(31, 'Pulpos a la Veracruzana con arroz blanco', 206.31, 'Plato fuerte', FALSE),
+(31, 'Pulpos Enchipotlados con arroz blanco', 156.62, 'Plato fuerte', FALSE),
+(31, 'Pulpos al Mojo de Ajo con arroz blanco', 166.23, 'Plato fuerte', FALSE),
+(31, 'Pulpo a la Diabla con arroz blanco', 205.87, 'Plato fuerte', FALSE);
 
 
--- CAT 32: VARIOS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(32, 'Ensalada de Pollo con tostadas', 0.00, 'Platillo', FALSE),
-(32, 'Enchiladas Verdes con Pollo', 0.00, 'Platillo', FALSE),
-(32, 'Enfrijoladas de Pollo', 0.00, 'Platillo', FALSE),
-(32, 'Crepas de Pollo con ensalada', 0.00, 'Platillo', FALSE),
-(32, 'Croquetas de Pollo con ensalada', 0.00, 'Platillo', FALSE),
-(32, 'Enchiladas Poblanas con Pollo', 0.00, 'Platillo', FALSE),
-(32, 'Spaguetti con trocitos de Pollo a la Poblana', 0.00, 'Platillo', FALSE),
-(32, 'Chiles Rellenos de Queso bañados en Tomate', 0.00, 'Platillo', FALSE),
-(32, 'Chayote relleno de Picadillo Gratinado', 0.00, 'Platillo', FALSE),
-(32, 'Tinga Poblana con frijoles refritos', 0.00, 'Platillo', FALSE),
-(32, 'Spaguetti a la Boloñesa con Carne molida', 0.00, 'Platillo', FALSE),
-(32, 'Entomatadas con Pollo', 0.00, 'Platillo', FALSE),
-(32, 'Calabacitas Granitadas rellenas de carne', 0.00, 'Platillo', FALSE),
-(32, 'Calabacitas rellenas de Jamón y Queso', 0.00, 'Platillo', FALSE),
-(32, 'Chile Relleno de picadillo bañado en salsa', 0.00, 'Platillo', FALSE),
-(32, 'Salpicón Tabasqueño con Tostadas', 0.00, 'Platillo', FALSE),
-(32, 'Tacos Árabes con ensalada', 0.00, 'Platillo', FALSE),
-(32, 'Spaguetti a la Mantequilla con Jamón y Tocino', 0.00, 'Platillo', FALSE),
-(32, 'Chayote Capeado relleno de Jamón y Queso', 0.00, 'Platillo', FALSE),
-(32, 'Papas Rellenas de jamón y queso', 0.00, 'Platillo', FALSE),
-(32, 'Croquetas de Queso con ensalada', 0.00, 'Platillo', FALSE),
-(32, 'Coliflor Lampreado rellena de Queso', 0.00, 'Platillo', FALSE),
-(32, 'Acelgas rellenas de Jamón y Queso', 0.00, 'Platillo', FALSE);
+(32, 'Ensalada de Pollo con tostadas', 183.21, 'Platillo', FALSE),
+(32, 'Enchiladas Verdes con Pollo', 171.66, 'Platillo', FALSE),
+(32, 'Enfrijoladas de Pollo', 170.46, 'Platillo', FALSE),
+(32, 'Crepas de Pollo con ensalada', 151.14, 'Platillo', FALSE),
+(32, 'Croquetas de Pollo con ensalada', 188.32, 'Platillo', FALSE),
+(32, 'Enchiladas Poblanas con Pollo', 129.96, 'Platillo', FALSE),
+(32, 'Spaguetti con trocitos de Pollo a la Poblana', 151.27, 'Platillo', FALSE),
+(32, 'Chiles Rellenos de Queso bañados en Tomate', 122.78, 'Platillo', FALSE),
+(32, 'Chayote relleno de Picadillo Gratinado', 129.35, 'Platillo', FALSE),
+(32, 'Tinga Poblana con frijoles refritos', 161.67, 'Platillo', FALSE),
+(32, 'Spaguetti a la Boloñesa con Carne molida', 193.34, 'Platillo', FALSE),
+(32, 'Entomatadas con Pollo', 154.68, 'Platillo', FALSE),
+(32, 'Calabacitas Granitadas rellenas de carne', 210.59, 'Platillo', FALSE),
+(32, 'Calabacitas rellenas de Jamón y Queso', 184.64, 'Platillo', FALSE),
+(32, 'Chile Relleno de picadillo bañado en salsa', 173.23, 'Platillo', FALSE),
+(32, 'Salpicón Tabasqueño con Tostadas', 176.77, 'Platillo', FALSE),
+(32, 'Tacos Árabes con ensalada', 132.62, 'Platillo', FALSE),
+(32, 'Spaguetti a la Mantequilla con Jamón y Tocino', 124.77, 'Platillo', FALSE),
+(32, 'Chayote Capeado relleno de Jamón y Queso', 129.90, 'Platillo', FALSE),
+(32, 'Papas Rellenas de jamón y queso', 188.61, 'Platillo', FALSE),
+(32, 'Croquetas de Queso con ensalada', 121.50, 'Platillo', FALSE),
+(32, 'Coliflor Lampreado rellena de Queso', 177.70, 'Platillo', FALSE),
+(32, 'Acelgas rellenas de Jamón y Queso', 178.21, 'Platillo', FALSE);
 
 -- CAT 33: PAQUETES
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
@@ -2023,51 +2024,55 @@ WHERE suc.nombre LIKE 'Madison Grill%' AND av.nombre = 'Terraza';
 -- =========================================================
 
 -- A. GERENTES (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1),
     (ARRAY['Carlos', 'Roberto', 'Ana', 'Laura', 'Miguel', 'Sofia', 'Jorge', 'Patricia'])[floor(random()*8 + 1)],
     (ARRAY['Hernández', 'García', 'Martínez', 'López', 'González', 'Pérez', 'Rodríguez', 'Sánchez'])[floor(random()*8 + 1)],
     'admin123',
+    CONCAT('AUTH-', LPAD(((floor(random()*900000)::int) + 100000)::text, 6, '0')),
     TRUE
 FROM sucursal s
 WHERE s.nombre LIKE 'Madison Grill%';
 
 -- B. MESEROS (3 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Mesero' LIMIT 1),
     (ARRAY['Juan', 'Pedro', 'Maria', 'Luisa', 'Diego', 'Carmen', 'Raul', 'Elena', 'Fernando', 'Lucia', 'Ricardo', 'Teresa'])[floor(random()*12 + 1)],
     (ARRAY['Ramirez', 'Torres', 'Flores', 'Rivera', 'Gomez', 'Diaz', 'Cruz', 'Morales', 'Ortiz', 'Gutierrez', 'Chavez', 'Ramos'])[floor(random()*12 + 1)],
     'mesero123',
+    NULL,
     TRUE
 FROM sucursal s
 CROSS JOIN generate_series(1, 3) AS serie
 WHERE s.nombre LIKE 'Madison Grill%';
 
 -- C. COCINEROS (2 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cocinero' LIMIT 1),
     (ARRAY['Jose', 'Antonio', 'Francisco', 'Manuel', 'Javier', 'David', 'Daniel', 'Alejandro'])[floor(random()*8 + 1)],
     (ARRAY['Castillo', 'Jimenez', 'Moreno', 'Romero', 'Alvarez', 'Molina', 'Ruiz', 'Delgado'])[floor(random()*8 + 1)],
     'cocina123',
+    NULL,
     TRUE
 FROM sucursal s
 CROSS JOIN generate_series(1, 2) AS serie
 WHERE s.nombre LIKE 'Madison Grill%';
 
 -- D. CAJEROS (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1),
     (ARRAY['Gabriela', 'Veronica', 'Silvia', 'Monica', 'Adriana', 'Rosa', 'Isabel', 'Pilar'])[floor(random()*8 + 1)],
     (ARRAY['Vega', 'Campos', 'Mendez', 'Guzman', 'Vargas', 'Reyes', 'Aguilar', 'Rojas'])[floor(random()*8 + 1)],
     'caja123',
+    NULL,
     TRUE
 FROM sucursal s
 WHERE s.nombre LIKE 'Madison Grill%';
@@ -2340,13 +2345,14 @@ AND NOT EXISTS (SELECT 1 FROM mesa m WHERE m.area_id = av.area_id AND m.num_mesa
 -- =========================================================
 
 -- A. GERENTES (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1),
     (ARRAY['Luis', 'Carmen', 'Roberto', 'Fernanda', 'Javier', 'Adriana'])[floor(random()*6 + 1)],
     (ARRAY['Mendez', 'Vega', 'Castillo', 'Solis', 'Fuentes', 'Ortiz'])[floor(random()*6 + 1)],
     'adminbocata',
+    CONCAT('AUTH-', LPAD(((floor(random()*900000)::int) + 100000)::text, 6, '0')),
     TRUE
 FROM sucursal s
 WHERE s.nombre LIKE 'La Bocata%'
@@ -2357,39 +2363,42 @@ AND NOT EXISTS (
 );
 
 -- B. MESEROS (3 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Mesero' LIMIT 1),
     (ARRAY['Hugo', 'Paco', 'Luis', 'Ana', 'Maria', 'Sofia', 'Lucia', 'Diego', 'Carlos', 'Elena'])[floor(random()*10 + 1)],
     (ARRAY['Lopez', 'Perez', 'Garcia', 'Sanchez', 'Romero', 'Diaz', 'Torres', 'Ruiz', 'Alvarez', 'Vargas'])[floor(random()*10 + 1)],
     'meserobocata',
+    NULL,
     TRUE
 FROM sucursal s
 CROSS JOIN generate_series(1, 3) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- C. COCINEROS (2 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cocinero' LIMIT 1),
     (ARRAY['Miguel', 'Angel', 'Jose', 'Ramon', 'David', 'Daniel'])[floor(random()*6 + 1)],
     (ARRAY['Gutierrez', 'Chavez', 'Ramos', 'Flores', 'Acosta', 'Silva'])[floor(random()*6 + 1)],
     'cocinabocata',
+    NULL,
     TRUE
 FROM sucursal s
 CROSS JOIN generate_series(1, 2) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- D. CAJEROS (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1),
     (ARRAY['Patricia', 'Laura', 'Diana', 'Monica', 'Rosa'])[floor(random()*5 + 1)],
     (ARRAY['Morales', 'Rivera', 'Reyes', 'Jimenez', 'Molina'])[floor(random()*5 + 1)],
     'cajabocata',
+    NULL,
     TRUE
 FROM sucursal s
 WHERE s.nombre LIKE 'La Bocata%'

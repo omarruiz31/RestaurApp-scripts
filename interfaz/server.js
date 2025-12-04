@@ -31,42 +31,42 @@ app.get('/api/sucursales/:id', async (req, res) => {
 app.get('/api/mesas/:id', async (req, res) => {
     try {
         const query = `
-        WITH cuentas_activas_sucursal AS (
-            SELECT c.cuenta_id, c.fecha_hora_inicio, m.mesa_id
-            FROM cuenta c
-            JOIN cuentamesa cm ON c.cuenta_id = cm.cuenta_id
+        WITH ordenes_activas_sucursal AS (
+            SELECT c.orden_id, c.fecha_hora_inicio, m.mesa_id
+            FROM orden c
+            JOIN ordenmesa cm ON c.orden_id = cm.orden_id
             JOIN mesa m ON cm.mesa_id = m.mesa_id
             JOIN areaventa av ON m.area_id = av.area_id
             WHERE c.estado = TRUE AND av.sucursal_id = $1
         ),
         total_productos AS (
-            SELECT ca.cuenta_id, SUM(dc.cantidad * dc.precio_unitario) as total
-            FROM cuentas_activas_sucursal ca
-            JOIN comensal com ON ca.cuenta_id = com.cuenta_id
-            JOIN detalle_cuenta dc ON com.comensal_id = dc.comensal_id
-            GROUP BY ca.cuenta_id
+            SELECT ca.orden_id, SUM(dc.cantidad * dc.precio_unitario) as total
+            FROM ordenes_activas_sucursal ca
+            JOIN comensal com ON ca.orden_id = com.orden_id
+            JOIN detalle_orden dc ON com.comensal_id = dc.comensal_id
+            GROUP BY ca.orden_id
         ),
         total_extras AS (
-            SELECT ca.cuenta_id, SUM(dm.cantidad * dm.precio_unitario) as total
-            FROM cuentas_activas_sucursal ca
-            JOIN comensal com ON ca.cuenta_id = com.cuenta_id
-            JOIN detalle_cuenta dc ON com.comensal_id = dc.comensal_id
-            JOIN detalle_modificador dm ON dc.detalle_cuenta_id = dm.detalle_cuenta_id
-            GROUP BY ca.cuenta_id
+            SELECT ca.orden_id, SUM(dm.cantidad * dm.precio_unitario) as total
+            FROM ordenes_activas_sucursal ca
+            JOIN comensal com ON ca.orden_id = com.orden_id
+            JOIN detalle_orden dc ON com.comensal_id = dc.comensal_id
+            JOIN detalle_modificador dm ON dc.detalle_orden_id = dm.detalle_orden_id
+            GROUP BY ca.orden_id
         )
         SELECT 
             m.mesa_id,
             m.num_mesa,
             av.nombre AS area,
-            CASE WHEN ca.cuenta_id IS NOT NULL THEN 'ocupada' ELSE 'libre' END as estado_mesa,
-            ca.cuenta_id,
+            CASE WHEN ca.orden_id IS NOT NULL THEN 'ocupada' ELSE 'libre' END as estado_mesa,
+            ca.orden_id,
             to_char(ca.fecha_hora_inicio, 'HH24:MI') as hora,
             (COALESCE(tp.total, 0) + COALESCE(te.total, 0)) as gran_total
         FROM mesa m
         JOIN areaventa av ON m.area_id = av.area_id
-        LEFT JOIN cuentas_activas_sucursal ca ON m.mesa_id = ca.mesa_id
-        LEFT JOIN total_productos tp ON ca.cuenta_id = tp.cuenta_id
-        LEFT JOIN total_extras te ON ca.cuenta_id = te.cuenta_id
+        LEFT JOIN ordenes_activas_sucursal ca ON m.mesa_id = ca.mesa_id
+        LEFT JOIN total_productos tp ON ca.orden_id = tp.orden_id
+        LEFT JOIN total_extras te ON ca.orden_id = te.orden_id
         WHERE av.sucursal_id = $1
         ORDER BY av.nombre, m.num_mesa;
         `;
@@ -75,28 +75,30 @@ app.get('/api/mesas/:id', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); }
 });
 
-// --- RUTAS CRUD CUENTAS (POST, PUT, DELETE) ---
+// --- RUTAS CRUD ORDENES (POST, PUT, DELETE) ---
 
-// 1. ABRIR CUENTA (CREATE)
-app.post('/api/cuentas/abrir', async (req, res) => {
+// 1. ABRIR ORDEN (CREATE)
+// (Esta ruta antigua se reemplaza abajo por la versión con comensales, pero la dejo comentada o actualizada por si acaso)
+/*
+app.post('/api/ordenes/abrir', async (req, res) => {
     const { mesa_id } = req.body;
     const client = await pool.connect();
     
     try {
         await client.query('BEGIN'); // Iniciar transacción
         
-        // A. Crear la cuenta
-        const resCuenta = await client.query('INSERT INTO cuenta (estado) VALUES (TRUE) RETURNING cuenta_id');
-        const nuevaCuentaId = resCuenta.rows[0].cuenta_id;
+        // A. Crear la orden
+        const resOrden = await client.query('INSERT INTO orden (estado) VALUES (TRUE) RETURNING orden_id');
+        const nuevaOrdenId = resOrden.rows[0].orden_id;
         
         // B. Vincular a la mesa
-        await client.query('INSERT INTO cuentamesa (cuenta_id, mesa_id) VALUES ($1, $2)', [nuevaCuentaId, mesa_id]);
+        await client.query('INSERT INTO ordenmesa (orden_id, mesa_id) VALUES ($1, $2)', [nuevaOrdenId, mesa_id]);
         
         // C. Crear un comensal por defecto (para poder agregar pedidos después)
-        await client.query("INSERT INTO comensal (cuenta_id, nombre_etiqueta) VALUES ($1, 'Principal')", [nuevaCuentaId]);
+        await client.query("INSERT INTO comensal (orden_id, nombre_etiqueta) VALUES ($1, 'Principal')", [nuevaOrdenId]);
 
         await client.query('COMMIT'); // Guardar cambios
-        res.json({ success: true, message: 'Cuenta abierta' });
+        res.json({ success: true, message: 'Orden abierta' });
     } catch (e) {
         await client.query('ROLLBACK'); // Deshacer si hay error
         res.status(500).json({ error: e.message });
@@ -104,28 +106,29 @@ app.post('/api/cuentas/abrir', async (req, res) => {
         client.release();
     }
 });
+*/
 
-// 2. CERRAR CUENTA (UPDATE - Cobrar)
-app.put('/api/cuentas/cerrar/:id', async (req, res) => {
-    const { id } = req.params; // ID Cuenta
+// 2. CERRAR ORDEN (UPDATE - Cobrar)
+app.put('/api/ordenes/cerrar/:id', async (req, res) => {
+    const { id } = req.params; // ID Orden
     try {
         // Actualizamos estado a FALSE y ponemos fecha de cierre
-        await pool.query("UPDATE cuenta SET estado = FALSE, fecha_hora_cierre = NOW() WHERE cuenta_id = $1", [id]);
-        
+        await pool.query("UPDATE orden SET estado = FALSE, fecha_hora_cierre = NOW() WHERE orden_id = $1", [id]);
+
         // NOTA: En un sistema real aquí insertarías en la tabla 'pago', 
-        // pero para este ejemplo simplificado solo cerramos la cuenta.
-        
-        res.json({ success: true, message: 'Cuenta cerrada' });
+        // pero para este ejemplo simplificado solo cerramos la orden.
+
+        res.json({ success: true, message: 'Orden cerrada' });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 3. CANCELAR CUENTA (DELETE)
-app.delete('/api/cuentas/cancelar/:id', async (req, res) => {
+// 3. CANCELAR ORDEN (DELETE)
+app.delete('/api/ordenes/cancelar/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        // Al borrar la cuenta, el ON DELETE CASCADE de tu BD borrará la relación con la mesa
-        await pool.query("DELETE FROM cuenta WHERE cuenta_id = $1", [id]);
-        res.json({ success: true, message: 'Cuenta eliminada' });
+        // Al borrar la orden, el ON DELETE CASCADE de tu BD borrará la relación con la mesa
+        await pool.query("DELETE FROM orden WHERE orden_id = $1", [id]);
+        res.json({ success: true, message: 'Orden eliminada' });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -151,31 +154,31 @@ app.get('/api/menu/:sucursalId', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); }
 });
 
-// --- RUTAS CRUD CUENTAS ACTUALIZADAS ---
+// --- RUTAS CRUD ORDENES ACTUALIZADAS ---
 
-// 1. ABRIR CUENTA (Ahora con Comensales)
-app.post('/api/cuentas/abrir', async (req, res) => {
+// 1. ABRIR ORDEN (Ahora con Comensales)
+app.post('/api/ordenes/abrir', async (req, res) => {
     const { mesa_id, num_comensales } = req.body; // Recibimos num_comensales
     const cantidad = num_comensales || 1; // Por defecto 1
-    
+
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        
-        // A. Crear Cuenta
-        const resCuenta = await client.query('INSERT INTO cuenta (estado) VALUES (TRUE) RETURNING cuenta_id');
-        const nuevaCuentaId = resCuenta.rows[0].cuenta_id;
-        
+
+        // A. Crear Orden
+        const resOrden = await client.query('INSERT INTO orden (estado) VALUES (TRUE) RETURNING orden_id');
+        const nuevaOrdenId = resOrden.rows[0].orden_id;
+
         // B. Vincular Mesa
-        await client.query('INSERT INTO cuentamesa (cuenta_id, mesa_id) VALUES ($1, $2)', [nuevaCuentaId, mesa_id]);
-        
+        await client.query('INSERT INTO ordenmesa (orden_id, mesa_id) VALUES ($1, $2)', [nuevaOrdenId, mesa_id]);
+
         // C. Crear Comensales (Bucle)
-        for(let i = 1; i <= cantidad; i++) {
-            await client.query("INSERT INTO comensal (cuenta_id, nombre_etiqueta) VALUES ($1, $2)", [nuevaCuentaId, `Comensal ${i}`]);
+        for (let i = 1; i <= cantidad; i++) {
+            await client.query("INSERT INTO comensal (orden_id, nombre_etiqueta) VALUES ($1, $2)", [nuevaOrdenId, `Comensal ${i}`]);
         }
 
         await client.query('COMMIT');
-        res.json({ success: true, message: 'Cuenta abierta con comensales' });
+        res.json({ success: true, message: 'Orden abierta con comensales' });
     } catch (e) {
         await client.query('ROLLBACK');
         res.status(500).json({ error: e.message });
@@ -183,23 +186,23 @@ app.post('/api/cuentas/abrir', async (req, res) => {
 });
 
 // 2. AGREGAR PRODUCTO (NUEVO)
-app.post('/api/cuentas/pedido', async (req, res) => {
-    const { cuenta_id, producto_id, precio } = req.body;
-    
-    // Para simplificar esta interfaz, asignaremos el producto al PRIMER comensal de la cuenta
+app.post('/api/ordenes/pedido', async (req, res) => {
+    const { orden_id, producto_id, precio } = req.body;
+
+    // Para simplificar esta interfaz, asignaremos el producto al PRIMER comensal de la orden
     // En un sistema avanzado, elegirías a qué comensal asignar.
-    
+
     const client = await pool.connect();
     try {
-        // Buscar el ID del primer comensal de esta cuenta
-        const resComensal = await client.query('SELECT comensal_id FROM comensal WHERE cuenta_id = $1 ORDER BY comensal_id LIMIT 1', [cuenta_id]);
-        
-        if(resComensal.rows.length === 0) throw new Error("Cuenta sin comensales");
+        // Buscar el ID del primer comensal de esta orden
+        const resComensal = await client.query('SELECT comensal_id FROM comensal WHERE orden_id = $1 ORDER BY comensal_id LIMIT 1', [orden_id]);
+
+        if (resComensal.rows.length === 0) throw new Error("Orden sin comensales");
         const comensal_id = resComensal.rows[0].comensal_id;
 
         // Insertar detalle
         await client.query(
-            'INSERT INTO detalle_cuenta (comensal_id, producto_id, cantidad, precio_unitario) VALUES ($1, $2, 1, $3)',
+            'INSERT INTO detalle_orden (comensal_id, producto_id, cantidad, precio_unitario) VALUES ($1, $2, 1, $3)',
             [comensal_id, producto_id, precio]
         );
 
@@ -209,4 +212,4 @@ app.post('/api/cuentas/pedido', async (req, res) => {
 
 // ... (MANTENER RUTAS DE CERRAR Y CANCELAR IGUALES) ...
 
-app.listen(3000, () => console.log('Servidor actualizado puerto 3000'));
+// app.listen(3000, () => console.log('Servidor actualizado puerto 3000'));

@@ -252,14 +252,14 @@ AND NOT EXISTS (SELECT 1 FROM mesa m WHERE m.area_id = av.area_id AND m.num_mesa
 -- 4. INSERTAR EMPLEADOS CON NOMBRES REALES
 -- =========================================================
 
--- A. GERENTES (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1),
     (ARRAY['Luis', 'Carmen', 'Roberto', 'Fernanda', 'Javier', 'Adriana'])[floor(random()*6 + 1)],
     (ARRAY['Mendez', 'Vega', 'Castillo', 'Solis', 'Fuentes', 'Ortiz'])[floor(random()*6 + 1)],
     'adminbocata',
+    CONCAT('AUTH-', LPAD(((floor(random()*900000)::int) + 100000)::text, 6, '0')),
     TRUE
 FROM sucursal s
 WHERE s.nombre LIKE 'La Bocata%'
@@ -270,39 +270,42 @@ AND NOT EXISTS (
 );
 
 -- B. MESEROS (3 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Mesero' LIMIT 1),
     (ARRAY['Hugo', 'Paco', 'Luis', 'Ana', 'Maria', 'Sofia', 'Lucia', 'Diego', 'Carlos', 'Elena'])[floor(random()*10 + 1)],
     (ARRAY['Lopez', 'Perez', 'Garcia', 'Sanchez', 'Romero', 'Diaz', 'Torres', 'Ruiz', 'Alvarez', 'Vargas'])[floor(random()*10 + 1)],
     'meserobocata',
+    NULL,
     TRUE
 FROM sucursal s
 CROSS JOIN generate_series(1, 3) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- C. COCINEROS (2 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cocinero' LIMIT 1),
     (ARRAY['Miguel', 'Angel', 'Jose', 'Ramon', 'David', 'Daniel'])[floor(random()*6 + 1)],
     (ARRAY['Gutierrez', 'Chavez', 'Ramos', 'Flores', 'Acosta', 'Silva'])[floor(random()*6 + 1)],
     'cocinabocata',
+    NULL,
     TRUE
 FROM sucursal s
 CROSS JOIN generate_series(1, 2) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- D. CAJEROS (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1),
     (ARRAY['Patricia', 'Laura', 'Diana', 'Monica', 'Rosa'])[floor(random()*5 + 1)],
     (ARRAY['Morales', 'Rivera', 'Reyes', 'Jimenez', 'Molina'])[floor(random()*5 + 1)],
     'cajabocata',
+    NULL,
     TRUE
 FROM sucursal s
 WHERE s.nombre LIKE 'La Bocata%'

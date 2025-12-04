@@ -33,6 +33,8 @@ CREATE TABLE empleado(
     apellido VARCHAR(100) NOT NULL,
     estado BOOLEAN NOT NULL DEFAULT TRUE,
     contraseña VARCHAR(255) NOT NULL,
+    numero_autorizacion VARCHAR(100) DEFAULT NULL, -- campo nuevo 
+    
 
     CONSTRAINT fk_rol
         FOREIGN KEY(rol_id)
@@ -74,26 +76,28 @@ CREATE TABLE mesa(
         FOREIGN KEY (area_id)
         REFERENCES areaventa(area_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT uq_mesa_por_area --restriccion nueva 
+    UNIQUE (area_id, num_mesa)
 );
 
-CREATE TABLE cuenta (
-    cuenta_id SERIAL PRIMARY KEY,
+CREATE TABLE orden (
+    orden_id SERIAL PRIMARY KEY,
     fecha_hora_inicio TIMESTAMP NOT NULL DEFAULT NOW(),
     fecha_hora_cierre TIMESTAMP,
     estado BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE cuentaMesa(
-    cuenta_id INT NOT NULL,
+CREATE TABLE ordenMesa(
+    orden_id INT NOT NULL,
     mesa_id INT NOT NULL,
 
-    CONSTRAINT pk_cuenta_mesa
-        PRIMARY KEY (cuenta_id, mesa_id),
+    CONSTRAINT pk_orden_mesa
+        PRIMARY KEY (orden_id, mesa_id),
 
-    CONSTRAINT fk_cm_cuenta
-        FOREIGN KEY (cuenta_id)
-        REFERENCES cuenta(cuenta_id)
+    CONSTRAINT fk_cm_orden
+        FOREIGN KEY (orden_id)
+        REFERENCES orden(orden_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
     
@@ -106,12 +110,12 @@ CREATE TABLE cuentaMesa(
 
 CREATE TABLE comensal(
     comensal_id SERIAL PRIMARY KEY,
-    cuenta_id INT NOT NULL,
+    orden_id INT NOT NULL,
     nombre_etiqueta VARCHAR(40),
 
-    CONSTRAINT fk_cuenta_comensal
-        FOREIGN KEY(cuenta_id)
-        REFERENCES cuenta(cuenta_id)
+    CONSTRAINT fk_orden_comensal
+        FOREIGN KEY(orden_id)
+        REFERENCES orden(orden_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
@@ -210,8 +214,6 @@ CREATE TABLE producto_componente (
 
 );
 
---Dispositivo debe estar registrado a cuenta ?? 
-
 
 CREATE TABLE modificador(
     modificador_id SERIAL PRIMARY KEY,
@@ -250,19 +252,20 @@ CREATE TABLE descuento(
     monto_fijo NUMERIC(10,2),
     empresa VARCHAR(120),
     monedero_ahorro  NUMERIC(10,2),
-    activo BOOLEAN NOT NULL DEFAULT TRUE
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    necesita_autorizacion BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE detalle_pago(
     detalle_pago_id SERIAL PRIMARY KEY,
-    cuenta_id INT ,
+    orden_id INT ,
     comensal_id INT,
     pago_id INT,
     descuento_id INT,
 
-    CONSTRAINT fk_cuenta
-    FOREIGN KEY(cuenta_id)
-    REFERENCES cuenta(cuenta_id),
+    CONSTRAINT fk_orden
+    FOREIGN KEY(orden_id)
+    REFERENCES orden(orden_id),
 
     CONSTRAINT fk_comensal
     FOREIGN KEY(comensal_id)
@@ -313,8 +316,8 @@ CREATE TABLE dispositivo(
     ON DELETE RESTRICT
 );
 
-CREATE TABLE detalle_cuenta(
-    detalle_cuenta_id SERIAL PRIMARY KEY,
+CREATE TABLE detalle_orden(
+    detalle_orden_id SERIAL PRIMARY KEY,
     comensal_id INT NOT NULL,
     producto_id INT NOT NULL,
     cantidad  NUMERIC(10,2),
@@ -336,14 +339,14 @@ CREATE TABLE detalle_cuenta(
 
 CREATE TABLE detalle_modificador(
     detalle_modificador SERIAL  PRIMARY KEY,
-    detalle_cuenta_id INT NOT NULL,
+    detalle_orden_id INT NOT NULL,
     modificador_id INT,
     cantidad NUMERIC(10,2) NOT NULL DEFAULT 1,
     precio_unitario NUMERIC(10,2) NOT NULL,
 
     CONSTRAINT fk_dm_detalle
-        FOREIGN KEY(detalle_cuenta_id)
-        REFERENCES detalle_cuenta(detalle_cuenta_id)
+        FOREIGN KEY(detalle_orden_id)
+        REFERENCES detalle_orden(detalle_orden_id)
         ON UPDATE CASCADE
         ON DELETE CASCADE,
 
@@ -356,15 +359,15 @@ CREATE TABLE detalle_modificador(
 
 CREATE TABLE detalle_promocion(
 
-    detalle_cuenta_id INT NOT NULL,
+    detalle_orden_id INT NOT NULL,
     promocion_id INT NOT NULL,
 
     CONSTRAINT pk_detalle_promocion
-    PRIMARY KEY(detalle_cuenta_id,promocion_id),
+    PRIMARY KEY(detalle_orden_id,promocion_id),
 
     CONSTRAINT fk_detalle
-    FOREIGN KEY (detalle_cuenta_id)
-    REFERENCES detalle_cuenta(detalle_cuenta_id),
+    FOREIGN KEY (detalle_orden_id)
+    REFERENCES detalle_orden(detalle_orden_id),
 
     CONSTRAINT fk_promocion
     FOREIGN KEY(promocion_id)
@@ -406,14 +409,14 @@ CREATE TABLE area_cocina (
 
 CREATE TABLE historial_preparacion(
     historial_preparacion_id SERIAL PRIMARY KEY,
-    detalle_cuenta_id INT NOT NULL,
+    detalle_orden_id INT NOT NULL,
     area_cocina_id INT NOT NULL,
     estado VARCHAR(100) NOT NULL,
     fecha_hora_preparacion TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_detalle
-    FOREIGN KEY(detalle_cuenta_id)
-    REFERENCES detalle_cuenta(detalle_cuenta_id)
+    FOREIGN KEY(detalle_orden_id)
+    REFERENCES detalle_orden(detalle_orden_id)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
 

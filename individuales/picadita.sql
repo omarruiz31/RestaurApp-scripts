@@ -43,81 +43,81 @@ INSERT INTO rol (nombre, descripcion)
   ('Ayudante de cocina', 'Apoyo en cocina'),
   ('Cajero', 'Cobro y facturación');
 
-  INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, estado, contraseña)
+  INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, estado, contraseña, numero_autorizacion)
 VALUES
     -- Sucursal 1: Soriana Cuauhtémoc (Mina)
-    (1, 7, 'María',   'Gómez',      TRUE, 'pass123'),  -- Gerente de sucursal
-    (1, 2, 'Luis',    'Cruz',       TRUE, 'pass123'),  -- Mesero
-    (1, 2, 'Ana',     'Martínez',   TRUE, 'pass123'),  -- Mesera
-    (1, 2, 'Carlos',  'Ramírez',    TRUE, 'pass123'),  -- Mesero
-    (1, 8, 'Pedro',   'López',      TRUE, 'pass123'),  -- Cocinero
-    (1, 9, 'Daniel',  'Hernández',  TRUE, 'pass123'),  -- Ayudante de cocina
-    (1,10, 'Carla',   'Reyes',      TRUE, 'pass123'),  -- Cajera
-    (1, 1, 'Jorge',   'Pérez',      TRUE, 'pass123'),  -- Auxiliar administrativo
-    (1, 5, 'Laura',   'Hernández',  TRUE, 'pass123'),  -- Auxiliar de RRHH
-    (1, 6, 'Miguel',  'Vargas',     TRUE, 'pass123'),  -- Auxiliar de mantenimiento
-    (1, 4, 'Sofía',   'Rangel',     TRUE, 'pass123'),  -- Auditor
+    (1, 7, 'María',   'Gómez',      TRUE, 'pass123', 'AUTH-S1-001'),  -- Gerente de sucursal
+    (1, 2, 'Luis',    'Cruz',       TRUE, 'pass123', NULL),           -- Mesero
+    (1, 2, 'Ana',     'Martínez',   TRUE, 'pass123', NULL),           -- Mesera
+    (1, 2, 'Carlos',  'Ramírez',    TRUE, 'pass123', NULL),           -- Mesero
+    (1, 8, 'Pedro',   'López',      TRUE, 'pass123', NULL),           -- Cocinero
+    (1, 9, 'Daniel',  'Hernández',  TRUE, 'pass123', NULL),           -- Ayudante de cocina
+    (1,10, 'Carla',   'Reyes',      TRUE, 'pass123', NULL),           -- Cajera
+    (1, 1, 'Jorge',   'Pérez',      TRUE, 'pass123', NULL),           -- Auxiliar administrativo
+    (1, 5, 'Laura',   'Hernández',  TRUE, 'pass123', NULL),           -- Auxiliar de RRHH
+    (1, 6, 'Miguel',  'Vargas',     TRUE, 'pass123', NULL),           -- Auxiliar de mantenimiento
+    (1, 4, 'Sofía',   'Rangel',     TRUE, 'pass123', NULL),           -- Auditor
 
     -- Sucursal 2: Centro Mina
-    (2, 7, 'Ricardo', 'Navarro',    TRUE, 'pass123'),  -- Gerente
-    (2, 2, 'Elena',   'Castillo',   TRUE, 'pass123'),  -- Mesera
-    (2, 2, 'Diego',   'Santos',     TRUE, 'pass123'),  -- Mesero
-    (2, 8, 'Hugo',    'Mendoza',    TRUE, 'pass123'),  -- Cocinero
-    (2, 9, 'Brenda',  'Ortiz',      TRUE, 'pass123'),  -- Ayudante
-    (2,10, 'Nadia',   'Flores',     TRUE, 'pass123'),  -- Cajera
-    (2, 6, 'Óscar',   'Luna',       TRUE, 'pass123'),  -- Mantenimiento
+    (2, 7, 'Ricardo', 'Navarro',    TRUE, 'pass123', 'AUTH-S2-001'),  -- Gerente
+    (2, 2, 'Elena',   'Castillo',   TRUE, 'pass123', NULL),           -- Mesera
+    (2, 2, 'Diego',   'Santos',     TRUE, 'pass123', NULL),           -- Mesero
+    (2, 8, 'Hugo',    'Mendoza',    TRUE, 'pass123', NULL),           -- Cocinero
+    (2, 9, 'Brenda',  'Ortiz',      TRUE, 'pass123', NULL),           -- Ayudante
+    (2,10, 'Nadia',   'Flores',     TRUE, 'pass123', NULL),           -- Cajera
+    (2, 6, 'Óscar',   'Luna',       TRUE, 'pass123', NULL),           -- Mantenimiento
 
     -- Sucursal 3: Instituto Tecnológico (Mina)
-    (3, 7, 'Patricia','Rivera',     TRUE, 'pass123'),  -- Gerente
-    (3, 2, 'Iván',    'Torres',     TRUE, 'pass123'),  -- Mesero
-    (3, 2, 'Fabiola', 'Juárez',     TRUE, 'pass123'),  -- Mesera
-    (3, 8, 'Marco',   'Aguilar',    TRUE, 'pass123'),  -- Cocinero
-    (3, 9, 'Cintia',  'Salas',      TRUE, 'pass123'),  -- Ayudante
-    (3,10, 'Raúl',    'Pacheco',    TRUE, 'pass123'),  -- Cajero
+    (3, 7, 'Patricia','Rivera',     TRUE, 'pass123', 'AUTH-S3-001'),  -- Gerente
+    (3, 2, 'Iván',    'Torres',     TRUE, 'pass123', NULL),           -- Mesero
+    (3, 2, 'Fabiola', 'Juárez',     TRUE, 'pass123', NULL),           -- Mesera
+    (3, 8, 'Marco',   'Aguilar',    TRUE, 'pass123', NULL),           -- Cocinero
+    (3, 9, 'Cintia',  'Salas',      TRUE, 'pass123', NULL),           -- Ayudante
+    (3,10, 'Raúl',    'Pacheco',    TRUE, 'pass123', NULL),           -- Cajero
 
     -- Sucursal 4: Centro (Coatza) - sucursal central
-    (4, 7, 'Alejandro','Domínguez', TRUE, 'pass123'),  -- Gerente
-    (4, 2, 'Karla',   'Mora',       TRUE, 'pass123'),  -- Mesera
-    (4, 2, 'Sergio',  'Ibarra',     TRUE, 'pass123'),  -- Mesero
-    (4, 2, 'Yazmín',  'Salazar',    TRUE, 'pass123'),  -- Mesera
-    (4, 8, 'Noé',     'Cortés',     TRUE, 'pass123'),  -- Cocinero
-    (4, 9, 'Liliana', 'Rosales',    TRUE, 'pass123'),  -- Ayudante
-    (4,10, 'Eric',    'Velázquez',  TRUE, 'pass123'),  -- Cajero
-    (4, 1, 'Claudia', 'Mejía',      TRUE, 'pass123'),  -- Auxiliar administrativo
-    (4, 5, 'Adriana', 'Pineda',     TRUE, 'pass123'),  -- Auxiliar RRHH
-    (4, 6, 'Tomás',   'Galindo',    TRUE, 'pass123'),  -- Mantenimiento
+    (4, 7, 'Alejandro','Domínguez', TRUE, 'pass123', 'AUTH-S4-001'),  -- Gerente
+    (4, 2, 'Karla',   'Mora',       TRUE, 'pass123', NULL),           -- Mesera
+    (4, 2, 'Sergio',  'Ibarra',     TRUE, 'pass123', NULL),           -- Mesero
+    (4, 2, 'Yazmín',  'Salazar',    TRUE, 'pass123', NULL),           -- Mesera
+    (4, 8, 'Noé',     'Cortés',     TRUE, 'pass123', NULL),           -- Cocinero
+    (4, 9, 'Liliana', 'Rosales',    TRUE, 'pass123', NULL),           -- Ayudante
+    (4,10, 'Eric',    'Velázquez',  TRUE, 'pass123', NULL),           -- Cajero
+    (4, 1, 'Claudia', 'Mejía',      TRUE, 'pass123', NULL),           -- Auxiliar administrativo
+    (4, 5, 'Adriana', 'Pineda',     TRUE, 'pass123', NULL),           -- Auxiliar RRHH
+    (4, 6, 'Tomás',   'Galindo',    TRUE, 'pass123', NULL),           -- Mantenimiento
 
     -- Sucursal 5: Soriana Palmar
-    (5, 7, 'Fernando','Zamora',     TRUE, 'pass123'),  -- Gerente
-    (5, 2, 'Rocío',   'Campos',     TRUE, 'pass123'),  -- Mesera
-    (5, 2, 'Julio',   'Peña',       TRUE, 'pass123'),  -- Mesero
-    (5, 8, 'Gabriel', 'Solís',      TRUE, 'pass123'),  -- Cocinero
-    (5, 9, 'Paola',   'Delgado',    TRUE, 'pass123'),  -- Ayudante
-    (5,10, 'Inés',    'Bernal',     TRUE, 'pass123'),  -- Cajera
+    (5, 7, 'Fernando','Zamora',     TRUE, 'pass123', 'AUTH-S5-001'),  -- Gerente
+    (5, 2, 'Rocío',   'Campos',     TRUE, 'pass123', NULL),           -- Mesera
+    (5, 2, 'Julio',   'Peña',       TRUE, 'pass123', NULL),           -- Mesero
+    (5, 8, 'Gabriel', 'Solís',      TRUE, 'pass123', NULL),           -- Cocinero
+    (5, 9, 'Paola',   'Delgado',    TRUE, 'pass123', NULL),           -- Ayudante
+    (5,10, 'Inés',    'Bernal',     TRUE, 'pass123', NULL),           -- Cajera
 
     -- Sucursal 6: Soriana Mercado
-    (6, 7, 'Héctor',  'Castañeda',  TRUE, 'pass123'),  -- Gerente
-    (6, 2, 'Nancy',   'Quiroz',     TRUE, 'pass123'),  -- Mesera
-    (6, 2, 'Omar',    'Lagos',      TRUE, 'pass123'),  -- Mesero
-    (6, 8, 'Ulises',  'Carrillo',   TRUE, 'pass123'),  -- Cocinero
-    (6, 9, 'Rebeca',  'Fierro',     TRUE, 'pass123'),  -- Ayudante
-    (6,10, 'Diana',   'Acosta',     TRUE, 'pass123'),  -- Cajera
+    (6, 7, 'Héctor',  'Castañeda',  TRUE, 'pass123', 'AUTH-S6-001'),  -- Gerente
+    (6, 2, 'Nancy',   'Quiroz',     TRUE, 'pass123', NULL),           -- Mesera
+    (6, 2, 'Omar',    'Lagos',      TRUE, 'pass123', NULL),           -- Mesero
+    (6, 8, 'Ulises',  'Carrillo',   TRUE, 'pass123', NULL),           -- Cocinero
+    (6, 9, 'Rebeca',  'Fierro',     TRUE, 'pass123', NULL),           -- Ayudante
+    (6,10, 'Diana',   'Acosta',     TRUE, 'pass123', NULL),           -- Cajera
 
     -- Sucursal 7: Malecón
-    (7, 7, 'Ramón',   'Arriaga',    TRUE, 'pass123'),  -- Gerente
-    (7, 2, 'Mónica',  'García',     TRUE, 'pass123'),  -- Mesera
-    (7, 2, 'Javier',  'Franco',     TRUE, 'pass123'),  -- Mesero
-    (7, 8, 'Israel',  'Nieto',      TRUE, 'pass123'),  -- Cocinero
-    (7, 9, 'Paty',    'Corona',     TRUE, 'pass123'),  -- Ayudante
-    (7,10, 'Bruno',   'Silva',      TRUE, 'pass123'),  -- Cajero
+    (7, 7, 'Ramón',   'Arriaga',    TRUE, 'pass123', 'AUTH-S7-001'),  -- Gerente
+    (7, 2, 'Mónica',  'García',     TRUE, 'pass123', NULL),           -- Mesera
+    (7, 2, 'Javier',  'Franco',     TRUE, 'pass123', NULL),           -- Mesero
+    (7, 8, 'Israel',  'Nieto',      TRUE, 'pass123', NULL),           -- Cocinero
+    (7, 9, 'Paty',    'Corona',     TRUE, 'pass123', NULL),           -- Ayudante
+    (7,10, 'Bruno',   'Silva',      TRUE, 'pass123', NULL),           -- Cajero
 
     -- Sucursal 8: Gaviotas
-    (8, 7, 'Esteban', 'Méndez',     TRUE, 'pass123'),  -- Gerente
-    (8, 2, 'Luz',     'Arellano',   TRUE, 'pass123'),  -- Mesera
-    (8, 2, 'Carlos',  'Mora',       TRUE, 'pass123'),  -- Mesero
-    (8, 8, 'Iván',    'Cano',       TRUE, 'pass123'),  -- Cocinero
-    (8, 9, 'Marisol', 'León',       TRUE, 'pass123'),  -- Ayudante
-    (8,10, 'Pablo',   'Esquivel',   TRUE, 'pass123');  -- Cajero
+    (8, 7, 'Esteban', 'Méndez',     TRUE, 'pass123', 'AUTH-S8-001'),  -- Gerente
+    (8, 2, 'Luz',     'Arellano',   TRUE, 'pass123', NULL),           -- Mesera
+    (8, 2, 'Carlos',  'Mora',       TRUE, 'pass123', NULL),           -- Mesero
+    (8, 8, 'Iván',    'Cano',       TRUE, 'pass123', NULL),           -- Cocinero
+    (8, 9, 'Marisol', 'León',       TRUE, 'pass123', NULL),           -- Ayudante
+    (8,10, 'Pablo',   'Esquivel',   TRUE, 'pass123', NULL);           -- Cajero
 
 
 INSERT INTO area_impresion (nombre, ip, tipo_impresora, estado)
