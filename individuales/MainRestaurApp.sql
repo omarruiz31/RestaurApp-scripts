@@ -32,7 +32,7 @@ CREATE TABLE empleado(
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     estado BOOLEAN NOT NULL DEFAULT TRUE,
-    contraseña VARCHAR(255) NOT NULL,
+    contrasena VARCHAR(255) NOT NULL,
     numero_autorizacion VARCHAR(100) DEFAULT NULL, -- campo nuevo 
     
 
@@ -125,7 +125,7 @@ CREATE TABLE reserva(
     mesa_id INT NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     telefono VARCHAR(12),
-    num_acompañantes INT NOT NULL,
+    num_acompanantes INT NOT NULL,
     fecha_hora_reserva TIMESTAMP NOT NULL,
     CONSTRAINT fk_mesa_reserva
         FOREIGN KEY (mesa_id)

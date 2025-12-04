@@ -252,7 +252,7 @@ AND NOT EXISTS (SELECT 1 FROM mesa m WHERE m.area_id = av.area_id AND m.num_mesa
 -- 4. INSERTAR EMPLEADOS CON NOMBRES REALES
 -- =========================================================
 
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contrasena, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1),
@@ -270,7 +270,7 @@ AND NOT EXISTS (
 );
 
 -- B. MESEROS (3 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contrasena, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Mesero' LIMIT 1),
@@ -284,7 +284,7 @@ CROSS JOIN generate_series(1, 3) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- C. COCINEROS (2 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contrasena, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cocinero' LIMIT 1),
@@ -298,7 +298,7 @@ CROSS JOIN generate_series(1, 2) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- D. CAJEROS (1 por sucursal)
-INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
+INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contrasena, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
     (SELECT rol_id FROM rol WHERE nombre = 'Cajero' LIMIT 1),
