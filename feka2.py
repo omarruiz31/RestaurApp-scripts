@@ -6,14 +6,14 @@ from decimal import Decimal
 
 # --- CONFIGURACIÓN ---
 DB_CONFIG = {
-    'dbname': 'restaurapp', 
+    'dbname': 'restaurant', 
     'user': 'postgres', 
     'password': '12345', # <--- REVISA TU CONTRASEÑA
     'host': 'localhost',
     'port': '5432'
 }
 
-OUTPUT_FILE = 'historial_final_corregido.sql'
+OUTPUT_FILE = 'historial_reparado.sql'
 FECHA_INICIO = datetime(2023, 1, 1)
 FECHA_FIN = datetime(2025, 12, 8)
 
@@ -77,7 +77,7 @@ class GeneradorHistorico:
 
             # 3. Productos y Paquetes por Sucursal
             for suc_id in self.ids_sucursales:
-                # Productos Individuales
+                # Productos
                 q_prod = f"""
                     SELECT p.producto_id, p.precio_unitario
                     FROM producto p
@@ -133,7 +133,7 @@ class GeneradorHistorico:
                 if t == 'detalle_modificador': pk = 'detalle_modificador'
                 
                 self.cur.execute(f"SELECT COALESCE(MAX({pk}), 0) FROM {t}")
-                self.contadores[t] = self.cur.fetchone()[0] + 50 # Margen de seguridad
+                self.contadores[t] = self.cur.fetchone()[0] + 50 
 
             print(f"Contexto cargado. Sucursales: {len(self.ids_sucursales)}")
 
@@ -236,9 +236,9 @@ class GeneradorHistorico:
                             ts_fin = ts_ini + timedelta(minutes=random.randint(30, 90))
                             if ts_fin > cierre: ts_fin = cierre - timedelta(minutes=5)
 
-                            # INSERT ORDEN
-                            f.write(f"INSERT INTO orden (orden_id, fecha_hora_inicio, fecha_hora_cierre, estado) VALUES ({orden_id}, '{ts_ini}', '{ts_fin}', FALSE);\n")
-                            # INSERT ORDENMESA
+                            # ASIGNAR EMPLEADO A LA ORDEN
+                            emp_mesero = random.choice(empleados)
+                            f.write(f"INSERT INTO orden (orden_id, empleado_id, fecha_hora_inicio, fecha_hora_cierre, estado) VALUES ({orden_id}, {emp_mesero}, '{ts_ini}', '{ts_fin}', FALSE);\n")
                             f.write(f"INSERT INTO ordenMesa (orden_id, mesa_id) VALUES ({orden_id}, {random.choice(mesas)});\n")
 
                             consumos = [] 
@@ -246,8 +246,8 @@ class GeneradorHistorico:
                             # 4. Comensales
                             for i_com in range(random.randint(1, 5)):
                                 self.contadores['comensal'] += 1
-                                com_id = self.contadores['comensal']
-                                f.write(f"INSERT INTO comensal (comensal_id, orden_id, nombre_etiqueta) VALUES ({com_id}, {orden_id}, 'C-{i_com+1}');\n")
+                                cid = self.contadores['comensal'] # Variable correcta: cid
+                                f.write(f"INSERT INTO comensal (comensal_id, orden_id, nombre_etiqueta) VALUES ({cid}, {orden_id}, 'C-{i_com+1}');\n")
                                 
                                 subtotal = Decimal(0)
 
@@ -263,7 +263,8 @@ class GeneradorHistorico:
 
                                     self.contadores['detalle_orden'] += 1
                                     did = self.contadores['detalle_orden']
-                                    f.write(f"INSERT INTO detalle_orden (detalle_orden_id, comensal_id, producto_id, cantidad, precio_unitario) VALUES ({did}, {com_id}, {pid}, 1, {precio});\n")
+                                    # CORRECCIÓN: Usar cid en lugar de com_id
+                                    f.write(f"INSERT INTO detalle_orden (detalle_orden_id, comensal_id, producto_id, cantidad, precio_unitario) VALUES ({did}, {cid}, {pid}, 1, {precio});\n")
                                     
                                     precio_final = Decimal(precio)
                                     
@@ -281,20 +282,18 @@ class GeneradorHistorico:
                                         promid = random.choice(self.ids_promociones)
                                         f.write(f"INSERT INTO detalle_promocion (detalle_orden_id, promocion_id) VALUES ({did}, {promid});\n")
 
-                                    # Historial Cocina (CORREGIDO TIEMPO)
+                                    # Historial Cocina (Tiempo +5 a 25 mins)
                                     if self.areas_cocina and random.random() < 0.8:
                                         self.contadores['historial_preparacion'] += 1
                                         hid = self.contadores['historial_preparacion']
                                         acoc = random.choice(self.areas_cocina)
-                                        
-                                        # TIEMPO REAL: Se suma de 5 a 25 mins al inicio
                                         ts_prep = ts_ini + timedelta(minutes=random.randint(5, 25))
-                                        
                                         f.write(f"INSERT INTO historial_preparacion (historial_preparacion_id, detalle_orden_id, area_cocina_id, estado, fecha_hora_preparacion) VALUES ({hid}, {did}, {acoc}, 'terminado', '{ts_prep}');\n")
 
                                     subtotal += precio_final
                                 
-                                if subtotal > 0: consumos.append({'id': com_id, 'monto': subtotal})
+                                # CORRECCIÓN: Usar cid en lugar de com_id
+                                if subtotal > 0: consumos.append({'id': cid, 'monto': subtotal})
 
                             # 5. Pagos
                             total_orden = sum(c['monto'] for c in consumos)

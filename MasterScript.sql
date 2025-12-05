@@ -116,7 +116,14 @@ CREATE TABLE orden (
     orden_id SERIAL PRIMARY KEY,
     fecha_hora_inicio TIMESTAMP NOT NULL DEFAULT NOW(),
     fecha_hora_cierre TIMESTAMP,
-    estado BOOLEAN NOT NULL DEFAULT TRUE
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+    empleado_id INT,
+    CONSTRAINT fk_orden_empleado 
+    FOREIGN KEY (empleado_id) 
+    REFERENCES empleado(empleado_id) 
+    ON UPDATE CASCADE 
+    ON DELETE RESTRICT
+
 );
 
 CREATE TABLE ordenMesa(
