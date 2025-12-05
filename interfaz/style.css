@@ -128,3 +128,12 @@ body { font-family: sans-serif; margin: 0; background: var(--bg); }
 .btn-mini-add:hover { background-color: #2980b9; }
 
 hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+.lbl-form {
+    display: block; 
+    text-align: left; 
+    font-size: 0.85rem; 
+    color: #555; 
+    font-weight: bold; 
+    margin-top: 10px;
+}

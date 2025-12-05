@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RestaurApp - Gestión de Cuentas</title>
+    <title>RestaurApp Monitor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
 
     <main id="app-container">
         <section id="view-restaurantes">
-            <h2>Selecciona un Restaurante</h2>
+            <h2>Restaurantes</h2>
             <div class="grid-container" id="list-restaurantes"></div>
         </section>
 
@@ -34,29 +34,37 @@
 
     <div id="modal-overlay" class="modal hidden">
         <div class="modal-content">
-            <h3 id="modal-titulo">Gestionar Mesa</h3>
-            <p id="modal-desc">Opciones:</p>
+            <h3 id="modal-titulo">Mesa</h3>
             
             <div id="acciones-libre" class="hidden">
-                <label style="display:block; text-align:left; font-size:0.9rem; color:#555;">Número de Personas:</label>
-                <input type="number" id="inp-comensales" value="2" min="1" max="20" class="input-form">
-                <button class="btn-action btn-open" onclick="accionAbrirCuenta()">➕ Abrir Mesa</button>
+                <p>Configuración de Apertura:</p>
+                
+                <label class="lbl-form">Atendido por:</label>
+                <select id="sel-mesero" class="input-form">
+                    <option value="">Cargando meseros...</option>
+                </select>
+
+                <label class="lbl-form">Personas:</label>
+                <input type="number" id="inp-comensales" value="2" min="1" max="15" class="input-form">
+                
+                <button class="btn-action btn-open" onclick="accionAbrirCuenta()">✅ Abrir Mesa</button>
             </div>
 
             <div id="acciones-ocupada" class="hidden">
+                <p id="info-orden" style="font-size: 0.9rem; color:#666; margin-bottom:10px;"></p>
+                
                 <div class="panel-pedido">
-                    <label>Agregar Producto:</label>
-                    <select id="sel-productos" class="input-form">
-                        <option>Cargando menú...</option>
-                    </select>
+                    <label>Agregar al pedido:</label>
+                    <select id="sel-productos" class="input-form"></select>
                     <button class="btn-mini-add" onclick="accionAgregarProducto()">Añadir</button>
                 </div>
+                
                 <hr>
                 <button class="btn-action btn-close" onclick="accionCerrarCuenta()">💰 Cobrar y Cerrar</button>
-                <button class="btn-action btn-delete" onclick="accionCancelarCuenta()">🗑 Cancelar Cuenta</button>
+                <button class="btn-action btn-delete" onclick="accionCancelarCuenta()">🗑 Cancelar Orden</button>
             </div>
 
-            <button class="btn-cancel" onclick="cerrarModal()">Cancelar / Salir</button>
+            <button class="btn-cancel" onclick="cerrarModal()">Cerrar Ventana</button>
         </div>
     </div>
 
