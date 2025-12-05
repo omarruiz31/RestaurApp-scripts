@@ -6,16 +6,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- CONFIGURACIÓN BD ---
+
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'restaurapp',
-    password: '12345', // <--- TU CONTRASEÑA
+    password: '12345', 
     port: 5432,
 });
 
-// --- RUTAS GET EXISTENTES (Restaurantes, Sucursales, Mesas, Menú) ---
+
 app.get('/api/restaurantes', async (req, res) => {
     const result = await pool.query('SELECT restaurante_id, nombre, rfc FROM restaurante ORDER BY restaurante_id');
     res.json(result.rows);
@@ -100,14 +100,13 @@ app.get('/api/mesas/:id', async (req, res) => {
     } catch (err) { res.status(500).send(err.message); }
 });
 
-// --- RUTAS TRANSACCIONALES ---
 
 // 1. ABRIR ORDEN (Ahora pide EMPLEADO_ID)
 app.post('/api/ordenes/abrir', async (req, res) => {
     const { mesa_id, num_comensales, empleado_id } = req.body; 
     const cantidad = num_comensales || 1;
 
-    // Validación básica
+    
     if (!empleado_id) return res.status(400).json({ error: "Se requiere un mesero para abrir la orden" });
 
     const client = await pool.connect();
@@ -135,7 +134,7 @@ app.post('/api/ordenes/abrir', async (req, res) => {
     } finally { client.release(); }
 });
 
-// 2. AGREGAR PRODUCTO (Igual que antes)
+
 app.post('/api/ordenes/pedido', async (req, res) => {
     const { orden_id, producto_id, precio } = req.body;
     const client = await pool.connect();
@@ -151,7 +150,7 @@ app.post('/api/ordenes/pedido', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); } finally { client.release(); }
 });
 
-// 3. CERRAR Y 4. CANCELAR (Igual que antes)
+
 app.put('/api/ordenes/cerrar/:id', async (req, res) => {
     try {
         await pool.query("UPDATE orden SET estado = FALSE, fecha_hora_cierre = NOW() WHERE orden_id = $1", [req.params.id]);

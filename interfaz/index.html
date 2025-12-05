@@ -8,6 +8,7 @@
 </head>
 <body>
     <header>
+        <img class="images" src="images.png" alt="">
         <h1>RestaurApp Monitor</h1>
         <button id="btn-volver" class="hidden" onclick="goBack()">⬅ Volver</button>
     </header>
@@ -47,7 +48,7 @@
                 <label class="lbl-form">Personas:</label>
                 <input type="number" id="inp-comensales" value="2" min="1" max="15" class="input-form">
                 
-                <button class="btn-action btn-open" onclick="accionAbrirCuenta()">✅ Abrir Mesa</button>
+                <button class="btn-action btn-open" onclick="accionAbrirCuenta()"> Abrir Mesa</button>
             </div>
 
             <div id="acciones-ocupada" class="hidden">
@@ -60,8 +61,8 @@
                 </div>
                 
                 <hr>
-                <button class="btn-action btn-close" onclick="accionCerrarCuenta()">💰 Cobrar y Cerrar</button>
-                <button class="btn-action btn-delete" onclick="accionCancelarCuenta()">🗑 Cancelar Orden</button>
+                <button class="btn-action btn-close" onclick="accionCerrarCuenta()"> Cobrar y Cerrar</button>
+                <button class="btn-action btn-delete" onclick="accionCancelarCuenta()"> Cancelar Orden</button>
             </div>
 
             <button class="btn-cancel" onclick="cerrarModal()">Cerrar Ventana</button>

@@ -1,7 +1,7 @@
 const API_URL = 'http://localhost:3000/api';
 let currentSucursalId = null;
-let listaEmpleados = []; // Cache de meseros
-let listaProductos = []; // Cache de menú
+let listaEmpleados = []; 
+let listaProductos = []; 
 
 // --- NAVEGACIÓN ---
 function showSection(id) {
@@ -41,12 +41,10 @@ async function loadSucursales(restId, nombre) {
     showSection('view-sucursales');
 }
 
-// --- ENTRADA A SUCURSAL (CARGA DE DATOS) ---
 async function enterSucursal(sucId, nombre) {
     currentSucursalId = sucId;
     document.getElementById('title-mesas').innerText = `Monitor: ${nombre}`;
     
-    // Cargar Catálogos en paralelo
     await Promise.all([cargarEmpleados(sucId), cargarMenu(sucId)]);
     
     refreshMesas();
@@ -75,8 +73,7 @@ async function refreshMesas() {
         const isBusy = m.estado_mesa === 'ocupada';
         const cssClass = isBusy ? 'mesa-ocupada' : 'mesa-libre';
         const total = isBusy ? `$${parseFloat(m.gran_total).toFixed(2)}` : 'Libre';
-        // Mostramos el nombre del mesero si está ocupada
-        const infoExtra = isBusy ? `<small>👤 ${m.mesero || '?'}</small><br><small>🕒 ${m.hora}</small>` : `<small>${m.area}</small>`;
+        const infoExtra = isBusy ? `<small> ${m.mesero || '?'}</small><br><small>🕒 ${m.hora}</small>` : `<small>${m.area}</small>`;
 
         return `
         <div class="mesa-card ${cssClass}" onclick="abrirModal(${m.mesa_id}, ${m.num_mesa}, ${m.orden_id}, '${m.estado_mesa}', '${m.mesero}')">
@@ -114,7 +111,7 @@ function abrirModal(mesaId, num, ordenId, estado, meseroNombre) {
         document.getElementById('acciones-ocupada').classList.remove('hidden');
         document.getElementById('info-orden').innerText = `Orden #${ordenId} - Atiende: ${meseroNombre}`;
         
-        // Llenar combo productos
+        
         const sel = document.getElementById('sel-productos');
         sel.innerHTML = listaProductos.map(p => 
             `<option value="${p.producto_id}" data-precio="${p.precio_unitario}">
