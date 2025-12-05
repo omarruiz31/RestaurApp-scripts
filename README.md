@@ -6,7 +6,12 @@
 
 2. Ejecuta dentro `MasterScript.sql`
 
-3. Descarga el historial_global https://drive.google.com/file/d/1hh_lCXYo-cW--mVf4rJGRQ036oft3VSe/view?usp=drive_link
+3. Descarga el historial_global https://drive.google.com/file/d/1_zVVvazYahMgvNGJrmKJqDAjsWSHWB7_/view?usp=drive_link
 
-4. ejecuta dentro de la carpeta:  `psql -U postgres -d restaurapp -f historial_final_corregido.sql`
+4. Ejecuta dentro de la carpeta:  `psql -U postgres -d restaurapp -f historial_final.sql`
 
+5. En psql desde git bash
+
+`\encoding UTF8` 
+
+`\i historial_final.sql`

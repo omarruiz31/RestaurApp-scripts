@@ -4,10 +4,8 @@ import random
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-# ... imports ...
 
-# FIJAR LA ALEATORIEDAD
-SEED_VALUE = 42  # Puede ser cualquier número
+SEED_VALUE = 42  
 random.seed(SEED_VALUE)
 Faker.seed(SEED_VALUE)
 
@@ -17,7 +15,7 @@ Faker.seed(SEED_VALUE)
 DB_CONFIG = {
     'dbname': 'restaurapp', 
     'user': 'postgres', 
-    'password': '12345', # <--- REVISA TU CONTRASEÑA
+    'password': '12345', 
     'host': 'localhost',
     'port': '5432'
 }
@@ -33,10 +31,8 @@ class GeneradorHistorico:
         self.conn = None
         self.cur = None
         
-        # Contexto
         self.ids_sucursales = []
         
-        # Listas de empleados clasificadas por Rol y Sucursal
         self.empleados_totales = {} 
         self.meseros_por_sucursal = {} 
         self.gerentes_por_sucursal = {}
@@ -61,15 +57,14 @@ class GeneradorHistorico:
             self.conn = psycopg2.connect(**DB_CONFIG)
             self.cur = self.conn.cursor()
 
-            # --- CORRECCIÓN DE PRECIOS $0.00 AL INICIO ---
-            print("🔧 Ajustando precios en $0.00 en la base de datos real...")
+            print("Ajustando precios en $0.00 en la base de datos real...")
             self.cur.execute("""
                 UPDATE producto 
                 SET precio_unitario = (random() * (220 - 120) + 120)::NUMERIC(10,2) 
                 WHERE precio_unitario = 0.00;
             """)
             self.conn.commit()
-            print("✅ Precios corregidos.")
+            print("Precios corregidos.")
 
             # 1. Sucursales
             self.cur.execute("SELECT sucursal_id FROM sucursal")
@@ -78,7 +73,6 @@ class GeneradorHistorico:
 
             # 2. Empleados (CLASIFICADOS POR ROL)
             for suc_id in self.ids_sucursales:
-                # Obtenemos ID y Nombre del Rol para filtrar
                 query_emp = f"""
                     SELECT e.empleado_id, r.nombre 
                     FROM empleado e
@@ -265,8 +259,6 @@ class GeneradorHistorico:
                             ts_fin = ts_ini + timedelta(minutes=random.randint(30, 90))
                             if ts_fin > cierre: ts_fin = cierre - timedelta(minutes=5)
 
-                            # --- SELECCIÓN DE EMPLEADO (LÓGICA DE ROLES MEJORADA) ---
-                            # Probabilidades: Mesero (85%), Cajero (10%), Gerente (5%)
                             empleado_orden = None
                             rand_val = random.random()
 
@@ -277,7 +269,6 @@ class GeneradorHistorico:
                             elif lista_gerentes:
                                 empleado_orden = random.choice(lista_gerentes)
                             else:
-                                # Fallback: Si no hay nadie del rol preferido, usar mesero o cualquiera
                                 if lista_meseros: empleado_orden = random.choice(lista_meseros)
                                 else: empleado_orden = random.choice(todos_emps)
 
