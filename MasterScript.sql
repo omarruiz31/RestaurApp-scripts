@@ -2085,7 +2085,7 @@ SELECT
     NULL,
     TRUE
 FROM sucursal s
-CROSS JOIN generate_series(1, 3) AS serie
+CROSS JOIN generate_series(1, 5) AS serie
 WHERE s.nombre LIKE 'Madison Grill%';
 
 -- C. COCINEROS (2 por sucursal)
@@ -2400,7 +2400,7 @@ AND NOT EXISTS (
     AND e.rol_id = (SELECT rol_id FROM rol WHERE nombre = 'Gerente' LIMIT 1)
 );
 
--- B. MESEROS (3 por sucursal)
+-- B. MESEROS (5 por sucursal)
 INSERT INTO empleado (sucursal_id, rol_id, nombre, apellido, contraseña, numero_autorizacion, estado)
 SELECT 
     s.sucursal_id,
@@ -2411,7 +2411,7 @@ SELECT
     NULL,
     TRUE
 FROM sucursal s
-CROSS JOIN generate_series(1, 3) AS serie
+CROSS JOIN generate_series(1, 5) AS serie
 WHERE s.nombre LIKE 'La Bocata%';
 
 -- C. COCINEROS (2 por sucursal)
