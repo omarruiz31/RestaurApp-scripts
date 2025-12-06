@@ -29,6 +29,8 @@ DROP TABLE IF EXISTS sucursal CASCADE;
 DROP TABLE IF EXISTS restaurante CASCADE;
 DROP TYPE IF EXISTS estado_mesa CASCADE;
 
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 CREATE TABLE restaurante(
     restaurante_id SERIAL PRIMARY KEY,
     nombre VARCHAR(120) NOT NULL,
@@ -169,7 +171,13 @@ CREATE TABLE reserva(
         FOREIGN KEY (mesa_id)
         REFERENCES mesa(mesa_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+
+    CONSTRAINT no_choque_reservas 
+    EXCLUDE USING GIST (
+        mesa_id WITH =, 
+        tsrange(fecha_hora_reserva, fecha_hora_reserva + INTERVAL '2 hours') WITH &&
+    )
 );
 
 
@@ -434,7 +442,13 @@ CREATE TABLE sesion(
         FOREIGN KEY (dispositivo_id)
         REFERENCES dispositivo(dispositivo_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+        
+    CONSTRAINT una_sesion_activa_por_empleado
+    EXCLUDE USING GIST (
+        empleado_id WITH =, 
+        tsrange(fecha_hora_apertura, COALESCE(fecha_hora_cierre, 'infinity'::timestamp)) WITH &&
+    )
 
 );
 
@@ -1067,82 +1081,82 @@ INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paq
 (1, 'Mole', 17.00, 'Picada de mole', FALSE),
 (1, 'Huevo estrellado', 20.00, 'Picada preparada', FALSE),
 (1, 'Chicharrón prensado', 20.00, 'Picada preparada', FALSE),
-(1, 'Pollo', 20.00, 'Picada preparada', FALSE),
-(1, 'Cochinita', 20.00, 'Picada preparada', FALSE),
-(1, 'Longaniza', 20.00, 'Picada preparada', FALSE),
-(1, 'Picadillo', 20.00, 'Picada preparada', FALSE),
-(1, 'Carne asada', 20.00, 'Picada preparada', FALSE),
-(1, 'Cecina', 20.00, 'Picada preparada', FALSE),
-(1, 'Chinameca', 20.00, 'Picada preparada', FALSE),
-(1, 'Tripa', 20.00, 'Picada preparada', FALSE),
-(1, 'Campechana (2 ing.)', 26.00, 'Picada con dos ingredientes', FALSE);
+(1, 'Picada Pollo', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Cochinita', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Longaniza', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Picadillo', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Carne asada', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Cecina', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Chinameca', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Tripa', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada Campechana (2 ing.)', 26.00, 'Picada con dos ingredientes', FALSE);
 
 -- CAT 2: MEMELAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(2, 'Chicharrón prensado', 78.00, 'Memela preparada', FALSE),
-(2, 'Pollo', 78.00, 'Memela preparada', FALSE),
-(2, 'Cochinita', 78.00, 'Memela preparada', FALSE),
-(2, 'Longaniza', 78.00, 'Memela preparada', FALSE),
-(2, 'Picadillo', 78.00, 'Memela preparada', FALSE),
-(2, 'Carne asada', 78.00, 'Memela preparada', FALSE),
-(2, 'Cecina', 78.00, 'Memela preparada', FALSE),
-(2, 'Chinameca', 78.00, 'Memela preparada', FALSE),
-(2, 'Tripa', 78.00, 'Memela preparada', FALSE),
-(2, 'Tradicional', 78.00, 'Memela preparada', FALSE),
-(2, 'Campechana (2 ing.)', 95.00, 'Memela combinada', FALSE);
+(2, 'Memela de Chicharrón prensado', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Pollo', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Cochinita', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Longaniza', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Picadillo', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Carne asada', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Cecina', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Chinameca', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela de Tripa', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela Tradicional', 78.00, 'Memela preparada', FALSE),
+(2, 'Memela Campechana (2 ing.)', 95.00, 'Memela combinada', FALSE);
 
 -- CAT 3: HUARACHES
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(3, 'Chicharrón prensado', 78.00, 'Huarache preparado', FALSE),
-(3, 'Pollo', 78.00, 'Huarache preparado', FALSE),
-(3, 'Cochinita', 78.00, 'Huarache preparado', FALSE),
-(3, 'Longaniza', 78.00, 'Huarache preparado', FALSE),
-(3, 'Picadillo', 78.00, 'Huarache preparado', FALSE),
-(3, 'Carne asada', 78.00, 'Huarache preparado', FALSE),
-(3, 'Cecina', 78.00, 'Huarache preparado', FALSE),
-(3, 'Chinameca', 78.00, 'Huarache preparado', FALSE),
-(3, 'Tripa', 78.00, 'Huarache preparado', FALSE),
-(3, 'Campechano (2 ing.)', 95.00, 'Huarache combinado', FALSE);
+(3, 'Huarcahe de Chicharrón prensado', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Pollo', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Cochinita', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Longaniza', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Picadillo', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Carne asada', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Cecina', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Chinameca', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Tripa', 78.00, 'Huarache preparado', FALSE),
+(3, 'Huarcahe de Campechano (2 ing.)', 95.00, 'Huarache combinado', FALSE);
 
 -- CAT 4: GORDITAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(4, 'Negra', 14.00, 'Gordita de frijol', FALSE),
-(4, 'Blanca', 14.00, 'Gordita sencilla', FALSE),
-(4, 'De dulce', 14.00, 'Gordita dulce', FALSE),
-(4, 'Con mole', 16.00, 'Gordita bañada', FALSE),
-(4, 'Especial', 23.00, 'Gordita preparada', FALSE),
-(4, 'Montada sencilla', 26.50, 'Gordita montada', FALSE),
-(4, 'Montada especial', 32.50, 'Gordita montada especial', FALSE);
+(4, 'Gordita Negra', 14.00, 'Gordita de frijol', FALSE),
+(4, 'Gordita Blanca', 14.00, 'Gordita sencilla', FALSE),
+(4, 'Gordita De dulce', 14.00, 'Gordita dulce', FALSE),
+(4, 'Gordita Con mole', 16.00, 'Gordita bañada', FALSE),
+(4, 'Gordita Especial', 23.00, 'Gordita preparada', FALSE),
+(4, 'Gordita Montada sencilla', 26.50, 'Gordita montada', FALSE),
+(4, 'Gordita Montada especial', 32.50, 'Gordita montada especial', FALSE);
 
 -- CAT 5: SALBUTES
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(5, 'Pollo', 22.50, 'Salbute preparado', FALSE),
-(5, 'Cochinita', 22.50, 'Salbute preparado', FALSE);
+(5, 'Salbute de Pollo', 22.50, 'Salbute preparado', FALSE),
+(5, 'Salbute de Cochinita', 22.50, 'Salbute preparado', FALSE);
 
 -- CAT 6: EMPANADAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(6, 'Queso', 15.00, 'Empanada frita', FALSE),
-(6, 'Jamón', 15.00, 'Empanada frita', FALSE),
-(6, 'Pollo', 15.00, 'Empanada frita', FALSE),
-(6, 'Prensado', 15.00, 'Empanada frita', FALSE),
-(6, 'Cochinita', 15.00, 'Empanada frita', FALSE),
-(6, 'Picadillo', 15.00, 'Empanada frita', FALSE),
-(6, 'Longaniza', 15.00, 'Empanada frita', FALSE),
-(6, 'Carne asada', 15.00, 'Empanada frita', FALSE),
-(6, 'Tripa', 15.00, 'Empanada frita', FALSE),
-(6, 'Campechana (Queso y 1 ing)', 19.00, 'Empanada combinada', FALSE);
+(6, 'Empanada de Queso', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Jamón', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Pollo', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Prensado', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Cochinita', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Picadillo', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Longaniza', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Carne asada', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada de Tripa', 15.00, 'Empanada frita', FALSE),
+(6, 'Empanada  Campechana (Queso y 1 ing)', 19.00, 'Empanada combinada', FALSE);
 
 -- CAT 7: TOSTADAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(7, 'Pollo', 21.00, 'Tostada preparada', FALSE),
-(7, 'Cochinita', 21.00, 'Tostada preparada', FALSE),
-(7, 'Picadillo', 21.00, 'Tostada preparada', FALSE);
+(7, 'Tostada de Pollo', 21.00, 'Tostada preparada', FALSE),
+(7, 'Tostada de Cochinita', 21.00, 'Tostada preparada', FALSE),
+(7, 'Tostada de Picadillo', 21.00, 'Tostada preparada', FALSE);
 
 -- CAT 8: DOBLADAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(8, 'Enfrijoladas con pollo (3 pzs)', 59.00, 'Orden de 3', TRUE),
-(8, 'Entomatadas con pollo (3 pzs)', 59.00, 'Orden de 3', TRUE),
-(8, 'Enmoladas con pollo (3 pzs)', 64.00, 'Orden de 3', TRUE);
+(8, 'Enfrijoladas con pollo (3 pzs)', 59.00, 'Orden de 3', FALSE),
+(8, 'Entomatadas con pollo (3 pzs)', 59.00, 'Orden de 3', FALSE),
+(8, 'Enmoladas con pollo (3 pzs)', 64.00, 'Orden de 3', FALSE);
 
 -- CAT 9: PLATANITOS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
@@ -1150,19 +1164,19 @@ INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paq
 
 -- CAT 10: TORTAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(10, 'Cochinita', 40.00, 'Torta preparada', FALSE),
-(10, 'Pollo', 40.00, 'Torta preparada', FALSE),
-(10, 'Longaniza', 40.00, 'Torta preparada', FALSE),
-(10, 'Chinameca', 40.00, 'Torta preparada', FALSE),
-(10, 'Carne asada', 40.00, 'Torta preparada', FALSE),
-(10, 'Campechana (2 ing.)', 52.00, 'Torta combinada', FALSE);
+(10, 'Torta de Cochinita', 40.00, 'Torta preparada', FALSE),
+(10, 'Torta de Pollo', 40.00, 'Torta preparada', FALSE),
+(10, 'Torta de Longaniza', 40.00, 'Torta preparada', FALSE),
+(10, 'Torta de Chinameca', 40.00, 'Torta preparada', FALSE),
+(10, 'Torta de Carne asada', 40.00, 'Torta preparada', FALSE),
+(10, 'Torta  Campechana (2 ing.)', 52.00, 'Torta combinada', FALSE);
 
 -- CAT 11: HUEVOS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(11, 'Motuleños', 77.00, 'Huevos preparados', FALSE),
-(11, 'Rancheros', 77.00, 'Huevos preparados', FALSE),
-(11, 'Divorciados', 77.00, 'Huevos preparados', FALSE),
-(11, 'Al gusto (Jamon/Long/Tirados/Salsa/Mexicana)', 65.00, 'Huevos al gusto', FALSE);
+(11, 'Huevos Motuleños', 77.00, 'Huevos preparados', FALSE),
+(11, 'Huevos Rancheros', 77.00, 'Huevos preparados', FALSE),
+(11, 'Huevos Divorciados', 77.00, 'Huevos preparados', FALSE),
+(11, 'Huevos Al gusto (Jamon/Long/Tirados/Salsa/Mexicana)', 65.00, 'Huevos al gusto', FALSE);
 
 -- CAT 12: PLATILLOS REGIONALES
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
@@ -1180,15 +1194,15 @@ INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paq
 
 -- CAT 13: TACOS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(13, 'Carne asada', 15.00, 'Taco individual', FALSE),
-(13, 'Cochinita', 15.00, 'Taco individual', FALSE),
-(13, 'Tripa', 15.00, 'Taco individual', FALSE),
-(13, 'Longaniza', 15.00, 'Taco individual', FALSE),
-(13, 'Chinameca', 15.00, 'Taco individual', FALSE),
-(13, 'Cecina', 15.00, 'Taco individual', FALSE),
-(13, 'Prensado', 15.00, 'Taco individual', FALSE),
-(13, 'Campechano (2 ing.)', 19.50, 'Taco combinado', FALSE),
-(13, 'Dorados de pollo (3 pzs)', 48.00, 'Orden de tacos dorados', TRUE);
+(13, 'Taco de Carne asada', 15.00, 'Taco individual', FALSE),
+(13, 'Taco de Cochinita', 15.00, 'Taco individual', FALSE),
+(13, 'Taco de Tripa', 15.00, 'Taco individual', FALSE),
+(13, 'Taco de Longaniza', 15.00, 'Taco individual', FALSE),
+(13, 'Taco de Chinameca', 15.00, 'Taco individual', FALSE),
+(13, 'Taco de Cecina', 15.00, 'Taco individual', FALSE),
+(13, 'Taco Prensado', 15.00, 'Taco individual', FALSE),
+(13, 'Taco Campechano (2 ing.)', 19.50, 'Taco combinado', FALSE),
+(13, 'Tacos Dorados de pollo (3 pzs)', 48.00, 'Orden de tacos dorados', FALSE);
 
 -- CAT 14: CALDOS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
@@ -1594,7 +1608,7 @@ INSERT INTO producto_componente (id_producto_padre, id_producto_hijo, cantidad) 
 (
   (SELECT producto_id FROM producto WHERE nombre = 'Paquete Desayunes'),
   (SELECT producto_id FROM producto 
-     WHERE nombre = 'Motuleños' AND categoria_id = 11),
+     WHERE nombre = 'Huevos Motuleños' AND categoria_id = 11),
   1
 ),
 (
@@ -1630,7 +1644,7 @@ INSERT INTO producto_componente (id_producto_padre, id_producto_hijo, cantidad) 
 (
   (SELECT producto_id FROM producto WHERE nombre = 'Paquete Rico'),
   (SELECT producto_id FROM producto 
-     WHERE nombre = 'Carne asada' AND categoria_id = 2),  -- Memela carne asada
+     WHERE nombre = 'Memela de Carne asada' AND categoria_id = 2),  -- Memela carne asada
   1
 ),
 (
@@ -1687,7 +1701,7 @@ INSERT INTO producto_componente (id_producto_padre, id_producto_hijo, cantidad) 
 (
   (SELECT producto_id FROM producto WHERE nombre = 'Paquete Piques'),
   (SELECT producto_id FROM producto 
-     WHERE nombre = 'Carne asada' AND categoria_id = 1),  -- Picada carne asada
+     WHERE nombre = 'Picada Carne asada' AND categoria_id = 1),  -- Picada carne asada
   3
 ),
 (
@@ -1717,7 +1731,7 @@ INSERT INTO producto_componente (id_producto_padre, id_producto_hijo, cantidad) 
 (
   (SELECT producto_id FROM producto WHERE nombre = 'Paquete Alcance'),
   (SELECT producto_id FROM producto 
-     WHERE nombre = 'Carne asada' AND categoria_id = 6),  -- Empanada carne asada
+     WHERE nombre = 'Empanada de Carne asada' AND categoria_id = 6),  -- Empanada carne asada
   3
 ),
 (
@@ -1732,7 +1746,7 @@ INSERT INTO producto_componente (id_producto_padre, id_producto_hijo, cantidad) 
 (
   (SELECT producto_id FROM producto WHERE nombre = 'Paquete Nutras'),
   (SELECT producto_id FROM producto 
-     WHERE nombre = 'Pollo' AND categoria_id = 7),  -- Tostada de pollo (como tostada de carne)
+     WHERE nombre = 'Tostada de Pollo' AND categoria_id = 7),  -- Tostada de pollo (como tostada de carne)
   2
 ),
 (
@@ -2229,7 +2243,7 @@ INSERT INTO producto (categoria_id, nombre, precio_unitario, es_paquete) VALUES
 INSERT INTO producto (categoria_id, nombre, precio_unitario, es_paquete) VALUES
 ((SELECT categoria_id FROM categoria WHERE nombre='Bebidas Frías' LIMIT 1), 'Frappuccino Clásico', 77, FALSE),
 ((SELECT categoria_id FROM categoria WHERE nombre='Bebidas Frías' LIMIT 1), 'Café Frío', 70, FALSE),
-((SELECT categoria_id FROM categoria WHERE nombre='Jugos y Jarras' LIMIT 1), 'Jugo de Naranja', 63, FALSE),
+((SELECT categoria_id FROM categoria WHERE nombre='Jugos y Jarras' LIMIT 1), 'Jugo de Naranja.', 63, FALSE),
 ((SELECT categoria_id FROM categoria WHERE nombre='Jugos y Jarras' LIMIT 1), 'Limonada Natural', 40, FALSE),
 ((SELECT categoria_id FROM categoria WHERE nombre='Jugos y Jarras' LIMIT 1), 'Jarra Clericot', 250, FALSE),
 ((SELECT categoria_id FROM categoria WHERE nombre='Jugos y Jarras' LIMIT 1), 'Jarra Sangría', 250, FALSE),
