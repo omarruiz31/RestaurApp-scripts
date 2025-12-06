@@ -267,20 +267,7 @@ CREATE TABLE metodo_pago(
     referencia VARCHAR(200)
 );
 
-CREATE TABLE pago(
-    pago_id SERIAL PRIMARY KEY,
-    metodo_id INT NOT NULL,
-    fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
-    monto NUMERIC(10,2),
-    propina NUMERIC(10,2),
 
-    CONSTRAINT fk_metodo
-    FOREIGN KEY(metodo_id)
-    REFERENCES metodo_pago(metodo_id)
-    ON UPDATE CASCADE
-    ON DELETE RESTRICT
-    
-);
 
 
 CREATE TABLE descuento(
@@ -295,29 +282,6 @@ CREATE TABLE descuento(
     necesita_autorizacion BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE detalle_pago(
-    detalle_pago_id SERIAL PRIMARY KEY,
-    orden_id INT ,
-    comensal_id INT,
-    pago_id INT,
-    descuento_id INT,
-
-    CONSTRAINT fk_orden
-    FOREIGN KEY(orden_id)
-    REFERENCES orden(orden_id),
-
-    CONSTRAINT fk_comensal
-    FOREIGN KEY(comensal_id)
-    REFERENCES comensal(comensal_id),
-
-    CONSTRAINT fk_pago
-    FOREIGN KEY(pago_id)
-    REFERENCES pago(pago_id),
-
-    CONSTRAINT fk_descuento
-    FOREIGN KEY(descuento_id)
-    REFERENCES descuento(descuento_id)
-);  
 
 CREATE TABLE promocion(
     promocion_id SERIAL PRIMARY KEY,
@@ -354,6 +318,78 @@ CREATE TABLE dispositivo(
     ON UPDATE CASCADE
     ON DELETE RESTRICT
 );
+
+CREATE TABLE sesion(
+    sesion_id SERIAL PRIMARY KEY,
+    empleado_id INT NOT NULL,
+    dispositivo_id INT NOT NULL,
+    fecha_hora_apertura TIMESTAMP NOT NULL DEFAULT NOW(),
+    fecha_hora_cierre TIMESTAMP,
+    efectivo_inicial NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    efectivo_cierre_conteo NUMERIC(10,2),
+    efectivo_cierre_sistema NUMERIC(10,2),
+    diferencia NUMERIC(10,2),
+    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
+
+    CONSTRAINT fk_sesion_empleado
+        FOREIGN KEY (empleado_id)
+        REFERENCES empleado(empleado_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_sesion_dispositivo
+        FOREIGN KEY (dispositivo_id)
+        REFERENCES dispositivo(dispositivo_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+
+);
+
+CREATE TABLE pago(
+    pago_id SERIAL PRIMARY KEY,
+    metodo_id INT NOT NULL,
+    sesion_id INT NOT NULL,
+    fecha_hora TIMESTAMP NOT NULL DEFAULT NOW(),
+    monto NUMERIC(10,2),
+    propina NUMERIC(10,2),
+
+    CONSTRAINT fk_metodo
+    FOREIGN KEY(metodo_id)
+    REFERENCES metodo_pago(metodo_id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT,
+
+    CONSTRAINT fk_pago_sesion 
+    FOREIGN KEY (sesion_id) 
+    REFERENCES sesion(sesion_id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+    
+);
+
+CREATE TABLE detalle_pago(
+    detalle_pago_id SERIAL PRIMARY KEY,
+    orden_id INT ,
+    comensal_id INT,
+    pago_id INT,
+    descuento_id INT,
+
+    CONSTRAINT fk_orden
+    FOREIGN KEY(orden_id)
+    REFERENCES orden(orden_id),
+
+    CONSTRAINT fk_comensal
+    FOREIGN KEY(comensal_id)
+    REFERENCES comensal(comensal_id),
+
+    CONSTRAINT fk_pago
+    FOREIGN KEY(pago_id)
+    REFERENCES pago(pago_id),
+
+    CONSTRAINT fk_descuento
+    FOREIGN KEY(descuento_id)
+    REFERENCES descuento(descuento_id)
+);  
 
 CREATE TABLE detalle_orden(
     detalle_orden_id SERIAL PRIMARY KEY,
@@ -413,31 +449,7 @@ CREATE TABLE detalle_promocion(
     REFERENCES promocion(promocion_id)
 );
 
-CREATE TABLE sesion(
-    sesion_id SERIAL PRIMARY KEY,
-    empleado_id INT NOT NULL,
-    dispositivo_id INT NOT NULL,
-    fecha_hora_apertura TIMESTAMP NOT NULL DEFAULT NOW(),
-    fecha_hora_cierre TIMESTAMP,
-    efectivo_inicial NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-    efectivo_cierre_conteo NUMERIC(10,2),
-    efectivo_cierre_sistema NUMERIC(10,2),
-    diferencia NUMERIC(10,2),
-    estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
 
-    CONSTRAINT fk_sesion_empleado
-        FOREIGN KEY (empleado_id)
-        REFERENCES empleado(empleado_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-
-    CONSTRAINT fk_sesion_dispositivo
-        FOREIGN KEY (dispositivo_id)
-        REFERENCES dispositivo(dispositivo_id)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
-
-);
 
 CREATE TABLE area_cocina (
     area_cocina_id SERIAL PRIMARY KEY,
@@ -468,7 +480,7 @@ CREATE TABLE historial_preparacion(
 );
 
 /*Entidades independientes
-Restaurantex, sucursalx, rol, area_impresion
+Restaurantex, sucursales, rol, area_impresion
 descuento, promocion, area_cocina, metodo_pago**/
 
 INSERT INTO restaurante (nombre, rfc)
