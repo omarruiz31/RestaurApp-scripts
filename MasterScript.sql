@@ -29,7 +29,6 @@ DROP TABLE IF EXISTS sucursal CASCADE;
 DROP TABLE IF EXISTS restaurante CASCADE;
 DROP TYPE IF EXISTS estado_mesa CASCADE;
 
-CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE restaurante(
     restaurante_id SERIAL PRIMARY KEY,
@@ -171,13 +170,7 @@ CREATE TABLE reserva(
         FOREIGN KEY (mesa_id)
         REFERENCES mesa(mesa_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-
-    CONSTRAINT no_choque_reservas 
-    EXCLUDE USING GIST (
-        mesa_id WITH =, 
-        tsrange(fecha_hora_reserva, fecha_hora_reserva + INTERVAL '2 hours') WITH &&
-    )
+        ON DELETE RESTRICT
 );
 
 
@@ -442,13 +435,7 @@ CREATE TABLE sesion(
         FOREIGN KEY (dispositivo_id)
         REFERENCES dispositivo(dispositivo_id)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
-        
-    CONSTRAINT una_sesion_activa_por_empleado
-    EXCLUDE USING GIST (
-        empleado_id WITH =, 
-        tsrange(fecha_hora_apertura, COALESCE(fecha_hora_cierre, 'infinity'::timestamp)) WITH &&
-    )
+        ON DELETE RESTRICT
 
 );
 
@@ -1071,16 +1058,16 @@ INSERT INTO categoria (menu_id, nombre) VALUES
 
 -- CAT 1: PICADAS
 INSERT INTO producto (categoria_id, nombre, precio_unitario, descripcion, es_paquete) VALUES
-(1, 'Salsa roja con chile', 14.00, 'Picada sencilla', FALSE),
-(1, 'Salsa roja sin chile', 14.00, 'Picada sencilla', FALSE),
-(1, 'Salsa verde', 14.00, 'Picada sencilla', FALSE),
-(1, 'Salsa chipotle', 14.00, 'Picada sencilla', FALSE),
-(1, 'Salsa ranchera', 14.00, 'Picada sencilla', FALSE),
-(1, 'Frijoles', 14.00, 'Picada sencilla', FALSE),
-(1, 'Salsa y frijoles', 16.00, 'Picada combinada', FALSE),
-(1, 'Mole', 17.00, 'Picada de mole', FALSE),
-(1, 'Huevo estrellado', 20.00, 'Picada preparada', FALSE),
-(1, 'Chicharrón prensado', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada con Salsa roja con chile', 14.00, 'Picada sencilla', FALSE),
+(1, 'Picada con Salsa roja sin chile', 14.00, 'Picada sencilla', FALSE),
+(1, 'Picada con Salsa verde', 14.00, 'Picada sencilla', FALSE),
+(1, 'Picada con Salsa chipotle', 14.00, 'Picada sencilla', FALSE),
+(1, 'Picado con Salsa ranchera', 14.00, 'Picada sencilla', FALSE),
+(1, 'Picada de Frijoles', 14.00, 'Picada sencilla', FALSE),
+(1, 'Picada de Salsa y frijoles', 16.00, 'Picada combinada', FALSE),
+(1, 'Picada de Mole', 17.00, 'Picada de mole', FALSE),
+(1, 'Picada con Huevo estrellado', 20.00, 'Picada preparada', FALSE),
+(1, 'Picada de Chicharrón prensado', 20.00, 'Picada preparada', FALSE),
 (1, 'Picada Pollo', 20.00, 'Picada preparada', FALSE),
 (1, 'Picada Cochinita', 20.00, 'Picada preparada', FALSE),
 (1, 'Picada Longaniza', 20.00, 'Picada preparada', FALSE),
@@ -1967,9 +1954,9 @@ INSERT INTO producto (categoria_id, nombre, descripcion, precio_unitario, es_paq
 ((SELECT categoria_id FROM categoria WHERE nombre='Madison Coctelería' LIMIT 1), 'Clericot', 'Vino tinto y frutas.', 139.00, FALSE),
 
 -- Carajillos
-((SELECT categoria_id FROM categoria WHERE nombre='Carajillos' LIMIT 1), 'Magnum', 'Con mini Magnum.', 145.00, FALSE),
-((SELECT categoria_id FROM categoria WHERE nombre='Carajillos' LIMIT 1), 'Mazapán', 'Con mazapán.', 130.00, FALSE),
-((SELECT categoria_id FROM categoria WHERE nombre='Carajillos' LIMIT 1), 'Clásico', 'Licor 43 y café.', 135.00, FALSE),
+((SELECT categoria_id FROM categoria WHERE nombre='Carajillos' LIMIT 1), 'Carajillo Magnum', 'Con mini Magnum.', 145.00, FALSE),
+((SELECT categoria_id FROM categoria WHERE nombre='Carajillos' LIMIT 1), 'Carajillo Mazapán', 'Con mazapán.', 130.00, FALSE),
+((SELECT categoria_id FROM categoria WHERE nombre='Carajillos' LIMIT 1), 'Carajillo Clásico', 'Licor 43 y café.', 135.00, FALSE),
 
 -- Cervezas
 ((SELECT categoria_id FROM categoria WHERE nombre='Cervezas' LIMIT 1), 'Agualegre 355 ml', NULL, 75.00, FALSE),
